@@ -21,5 +21,26 @@ func TestLimt(t *testing.T) {
 }
 
 func TestOrderbook(t *testing.T) {
+	ob := NewOrderbook()
 
+	buyOrder := NewOrder(true, 20)
+	buyOrder1 := NewOrder(true, 4)
+	buyOrder2 := NewOrder(true, 13)
+	buyOrder3 := NewOrder(true, 11)
+	askOrder := NewOrder(false, 50)
+	askOrder1 := NewOrder(false, 75)
+
+	ob.PlaceOrder(2000, buyOrder)
+	ob.PlaceOrder(1500, buyOrder1)
+	ob.PlaceOrder(2000, buyOrder2)
+	ob.PlaceOrder(200, buyOrder3)
+	ob.PlaceOrder(150, askOrder)
+	ob.PlaceOrder(570, askOrder1)
+
+	for _, v := range ob.Bids {
+		fmt.Printf("Volume: %.2f, Price: %d\n", v.TotalVolume, v.Price)
+	}
+	for _, v := range ob.Asks {
+		fmt.Printf("Volume: %.2f, Price: %d\n", v.TotalVolume, v.Price)
+	}
 }
