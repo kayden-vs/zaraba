@@ -5,11 +5,12 @@ package exchange;
 option go_package = "github.com/kayden-vs/zaraba/pb";
 
 message Order {
-    int64 id = 1;
-    int64 price = 2; 
+    // int64 id = 1;
+    // int64 price = 2; 
     double size = 3; 
     bool bid = 4;
-    int64 timestamp = 5;
+    Limit limit = 5;
+    int64 timestamp = 6;
 }
 
 message Limit {

@@ -22,12 +22,13 @@ const (
 )
 
 type Order struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Price         int64                  `protobuf:"varint,2,opt,name=price,proto3" json:"price,omitempty"`
-	Size          float64                `protobuf:"fixed64,3,opt,name=size,proto3" json:"size,omitempty"`
-	Bid           bool                   `protobuf:"varint,4,opt,name=bid,proto3" json:"bid,omitempty"`
-	Timestamp     int64                  `protobuf:"varint,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// int64 id = 1;
+	// int64 price = 2;
+	Size          float64 `protobuf:"fixed64,3,opt,name=size,proto3" json:"size,omitempty"`
+	Bid           bool    `protobuf:"varint,4,opt,name=bid,proto3" json:"bid,omitempty"`
+	Limit         *Limit  `protobuf:"bytes,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	Timestamp     int64   `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -62,20 +63,6 @@ func (*Order) Descriptor() ([]byte, []int) {
 	return file_exchange_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Order) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *Order) GetPrice() int64 {
-	if x != nil {
-		return x.Price
-	}
-	return 0
-}
-
 func (x *Order) GetSize() float64 {
 	if x != nil {
 		return x.Size
@@ -88,6 +75,13 @@ func (x *Order) GetBid() bool {
 		return x.Bid
 	}
 	return false
+}
+
+func (x *Order) GetLimit() *Limit {
+	if x != nil {
+		return x.Limit
+	}
+	return nil
 }
 
 func (x *Order) GetTimestamp() int64 {
@@ -161,13 +155,12 @@ var File_exchange_proto protoreflect.FileDescriptor
 
 const file_exchange_proto_rawDesc = "" +
 	"\n" +
-	"\x0eexchange.proto\x12\bexchange\"q\n" +
-	"\x05Order\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
-	"\x05price\x18\x02 \x01(\x03R\x05price\x12\x12\n" +
+	"\x0eexchange.proto\x12\bexchange\"r\n" +
+	"\x05Order\x12\x12\n" +
 	"\x04size\x18\x03 \x01(\x01R\x04size\x12\x10\n" +
-	"\x03bid\x18\x04 \x01(\bR\x03bid\x12\x1c\n" +
-	"\ttimestamp\x18\x05 \x01(\x03R\ttimestamp\"i\n" +
+	"\x03bid\x18\x04 \x01(\bR\x03bid\x12%\n" +
+	"\x05limit\x18\x05 \x01(\v2\x0f.exchange.LimitR\x05limit\x12\x1c\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"i\n" +
 	"\x05Limit\x12\x14\n" +
 	"\x05price\x18\x01 \x01(\x03R\x05price\x12'\n" +
 	"\x06orders\x18\x02 \x03(\v2\x0f.exchange.OrderR\x06orders\x12!\n" +
@@ -191,12 +184,13 @@ var file_exchange_proto_goTypes = []any{
 	(*Limit)(nil), // 1: exchange.Limit
 }
 var file_exchange_proto_depIdxs = []int32{
-	0, // 0: exchange.Limit.orders:type_name -> exchange.Order
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 0: exchange.Order.limit:type_name -> exchange.Limit
+	0, // 1: exchange.Limit.orders:type_name -> exchange.Order
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_exchange_proto_init() }
