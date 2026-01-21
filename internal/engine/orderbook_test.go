@@ -2,8 +2,15 @@ package engine
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
+
+func assert(t *testing.T, a, b any) {
+	if !reflect.DeepEqual(a, b) {
+		t.Errorf("%+v != %+v", a, b)
+	}
+}
 
 func TestLimt(t *testing.T) {
 	l := NewLimit(6000)
@@ -20,27 +27,35 @@ func TestLimt(t *testing.T) {
 	fmt.Printf("Limit price: %d, TotalVolume: %f, Orders: %d\n", l.Price, l.TotalVolume, len(l.Orders))
 }
 
-func TestOrderbook(t *testing.T) {
+func TestLimitOrder(t *testing.T) {
 	ob := NewOrderbook()
 
+	sellOrderA := NewOrder(false, 10)
+	sellOrderB := NewOrder(false, 20)
+
+	ob.PlaceLimitOrder(10000, sellOrderA)
+	ob.PlaceLimitOrder(1002, sellOrderB)
+
+	assert(t, len(ob.Asks), 2)
+}
+
+func TestPlaceMarketOrder(t *testing.T) {
+	ob := NewOrderbook()
+
+	sellOrder := NewOrder(false, 30)
+	ob.PlaceLimitOrder(100, sellOrder)
+
 	buyOrder := NewOrder(true, 20)
-	buyOrder1 := NewOrder(true, 4)
-	buyOrder2 := NewOrder(true, 13)
-	buyOrder3 := NewOrder(true, 11)
-	askOrder := NewOrder(false, 50)
-	askOrder1 := NewOrder(false, 75)
+	matches := ob.PlaceMarketOrder(buyOrder)
 
-	ob.PlaceOrder(2000, buyOrder)
-	ob.PlaceOrder(1500, buyOrder1)
-	ob.PlaceOrder(2000, buyOrder2)
-	ob.PlaceOrder(200, buyOrder3)
-	ob.PlaceOrder(150, askOrder)
-	ob.PlaceOrder(570, askOrder1)
+	assert(t, len(matches), 1)
+	assert(t, len(ob.Asks), 1)
+	assert(t, ob.AskTotalVolume(), 10.0)
+	assert(t, matches[0].Ask.Order, sellOrder.Order)
+	assert(t, matches[0].Bid.Order, buyOrder.Order)
+	assert(t, matches[0].SizeFilled, 20.0)
+	assert(t, matches[0].Price, int64(100))
+	assert(t, buyOrder.IsFilled(), true)
 
-	for _, v := range ob.Bids {
-		fmt.Printf("Volume: %.2f, Price: %d\n", v.TotalVolume, v.Price)
-	}
-	for _, v := range ob.Asks {
-		fmt.Printf("Volume: %.2f, Price: %d\n", v.TotalVolume, v.Price)
-	}
+	fmt.Printf("%+v", matches)
 }
