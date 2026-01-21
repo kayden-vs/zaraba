@@ -72,7 +72,10 @@ func (l *Limit) DeleteOrder(o *Order) {
 }
 
 func (l *Limit) Fill(o *Order) []Match {
-	matches := []Match{}
+	var (
+		matches        []Match
+		ordersToDelete []*Order
+	)
 
 	for _, order := range l.Orders {
 		localOrder := &Order{Order: order}
@@ -81,9 +84,17 @@ func (l *Limit) Fill(o *Order) []Match {
 
 		l.TotalVolume -= match.SizeFilled
 
+		if localOrder.IsFilled() {
+			ordersToDelete = append(ordersToDelete, localOrder)
+		}
+
 		if o.IsFilled() {
 			break
 		}
+	}
+
+	for _, v := range ordersToDelete {
+		l.DeleteOrder(v)
 	}
 
 	return matches
@@ -148,18 +159,28 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 			panic(fmt.Errorf("Not enough volume [size: %.2f] for market order [size: %.2f]", ob.AskTotalVolume(), o.Size))
 		}
 
-		for _, limit := range ob.Asks {
-			limitMatches := limit.Fill(o)
+		for i := 0; i < len(ob.Asks); i++ {
+			limitMatches := ob.Asks[i].Fill(o)
 			matches = append(matches, limitMatches...)
+
+			if len(ob.Asks[i].Orders) == 0 {
+				ob.clearLimit(true, ob.Asks[i])
+				i--
+			}
 		}
 	} else {
 		if o.Size > ob.BidTotalVolume() {
 			panic(fmt.Errorf("Not enough volume [size: %.2f] for market order [size: %.2f]", ob.BidTotalVolume(), o.Size))
 		}
 
-		for _, limit := range ob.Bids {
-			limitMatches := limit.Fill(o)
+		for i := 0; i < len(ob.Bids); i++ {
+			limitMatches := ob.Bids[i].Fill(o)
 			matches = append(matches, limitMatches...)
+
+			if len(ob.Bids[i].Orders) == 0 {
+				ob.clearLimit(true, ob.Bids[i])
+				i--
+			}
 		}
 	}
 
@@ -168,7 +189,6 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 
 func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
 	var limit *Limit
-
 	if o.Bid {
 		limit = ob.BidLimits[price]
 	} else {
@@ -200,6 +220,24 @@ func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
 		}
 	} else {
 		limit.AddOrder(o)
+	}
+}
+
+func (ob *Orderbook) clearLimit(bid bool, l *Limit) {
+	if bid {
+		delete(ob.BidLimits, l.Price)
+		for i := 0; i < len(ob.Bids); i++ {
+			if ob.Bids[i] == l {
+				ob.Bids = append(ob.Bids[:i], ob.Bids[i+1:]...)
+			}
+		}
+	} else {
+		delete(ob.AskLimits, l.Price)
+		for i := 0; i < len(ob.Asks); i++ {
+			if ob.Asks[i] == l {
+				ob.Asks = append(ob.Asks[:i], ob.Asks[i+1:]...)
+			}
+		}
 	}
 }
 
