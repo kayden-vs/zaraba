@@ -197,7 +197,6 @@ func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
 
 	if limit == nil {
 		limit = NewLimit(price)
-		limit.AddOrder(o)
 
 		if o.Bid {
 			ob.Bids = append(ob.Bids, limit)
@@ -218,9 +217,9 @@ func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
 
 			ob.AskLimits[price] = limit
 		}
-	} else {
-		limit.AddOrder(o)
 	}
+
+	limit.AddOrder(o)
 }
 
 func (ob *Orderbook) clearLimit(bid bool, l *Limit) {
@@ -238,6 +237,18 @@ func (ob *Orderbook) clearLimit(bid bool, l *Limit) {
 				ob.Asks = append(ob.Asks[:i], ob.Asks[i+1:]...)
 			}
 		}
+	}
+}
+
+func (ob *Orderbook) CancelOrder(o *Order) {
+	var limit *Limit
+	if o.Bid {
+		limit = ob.BidLimits[o.Limit.Price]
+	} else {
+		limit = ob.AskLimits[o.Limit.Price]
+	}
+	if limit != nil {
+		limit.DeleteOrder(o)
 	}
 }
 
