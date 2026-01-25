@@ -1,0 +1,24 @@
+package partials
+
+templ NavBar(isAuthenticated bool, csrfToken string){
+    <nav class="navbar">
+        <div>
+            <a href='/trade/BTC'>Trade</a>
+        </div>
+    if isAuthenticated{
+        <div>
+            <a href="/account/view">Account</a>
+        </div>
+        <div>
+            <form action='/user/logout' method='POST'>
+                <input type='hidden' name='csrf_token' value={ csrfToken }/>
+                <button>Logout</button>
+            </form>
+        </div>
+    } else {
+        <div>
+            <a href='/user/login'>Login</a>
+        </div>
+    }
+    </nav>
+}

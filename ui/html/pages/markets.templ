@@ -1,0 +1,37 @@
+package pages
+
+import "github.com/kayden-vs/zaraba/ui/html"
+
+type SymbolData struct {
+    Name string
+    Price int64
+    OneDayChange string
+    Volume float64 
+}
+
+templ MarketsPage(symbols []SymbolData, flash string, isAuthenticated bool, csrfToken string) {
+    @html.Base("Markets", flash, isAuthenticated, csrfToken, MarketsBody(symbols))
+}
+
+templ MarketsBody(symbols []SymbolData) {
+    if symbols != nil {
+        <table>
+        <tr>
+            <th>Symbol</th>
+            <th>Price</th>
+            <th>24h Change</th>
+            <th>Volume</th>
+        </tr>
+        for _,symbol := range symbols{
+        <tr>
+            <td><a href={"/trade/" + symbol.Name}>{symbol.Name}</a></td>
+            <td>{ symbol.Price }</td>
+            <td>{ symbol.OneDayChange }</td>
+            <td>{ symbol.Volume }</td>
+        </tr>
+        }
+        </table>
+    }else{
+        <p>Theres nothing to see here... yet!</p>
+    }
+}

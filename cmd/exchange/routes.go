@@ -11,6 +11,9 @@ import (
 func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
+	r.Use(app.sessionManager.LoadAndSave)
+	r.Use(noSurf)
+
 	staticFS, err := fs.Sub(ui.Files, "static")
 	if err != nil {
 		panic(err)

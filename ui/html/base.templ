@@ -1,0 +1,30 @@
+package html 
+
+import "github.com/kayden-vs/zaraba/ui/html/partials"
+
+templ Base(title string, flash string, isAuthenticated bool, csrfToken string, body templ.Component) {
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>{ title } - Zaraba</title>
+        <link rel='preconnect' href='https://fonts.googleapis.com'>
+        <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+        <link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap' rel='stylesheet'>
+        <link rel='stylesheet' href='/static/css/main.css'>
+    </head>
+    <body>
+        <header>
+            <h1><a href='/'>Zaraba</a></h1>
+        </header>
+        @partials.NavBar(isAuthenticated, csrfToken)
+        <main>
+            if flash != ""{
+                <div class='flash'>{ flash }</div>
+            }
+            @body
+        </main>
+    </body>
+    </html>
+}
