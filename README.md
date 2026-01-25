@@ -1,3 +1,3 @@
 # Zaraba
 
-A high-performance, concurrent Limit Order Book (LOB) and Matching Engine written in Go. Designed for low-latency trading simulations using price-time priority. 
+Zaraba is a high-performance cryptocurrency exchange backend built from the ground up in **Golang**. It focuses on technical excellence, using **gRPC** for internal communication and a custom **in-memory matching engine** for maximum throughput.

@@ -188,6 +188,9 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 }
 
 func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
+	// TODO: Check match for the limit order before putting it to ob
+	// 		 handle partial execution and only add remaining portion to the ob
+
 	var limit *Limit
 	if o.Bid {
 		limit = ob.BidLimits[price]
