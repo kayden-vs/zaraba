@@ -3,22 +3,28 @@ package partials
 templ NavBar(isAuthenticated bool, csrfToken string){
     <nav class="navbar">
         <div>
-            <a href='/trade/BTC'>Trade</a>
+            <a href='/trade/btcusdt'>Trade</a>
         </div>
-    if isAuthenticated{
-        <div>
-            <a href="/account/view">Account</a>
-        </div>
-        <div>
-            <form action='/user/logout' method='POST'>
-                <input type='hidden' name='csrf_token' value={ csrfToken }/>
-                <button>Logout</button>
-            </form>
-        </div>
-    } else {
-        <div>
-            <a href='/user/login'>Login</a>
-        </div>
-    }
+        if isAuthenticated{
+            <div>
+                <a href="/account/view">Account</a>
+            </div>
+            <div>
+                <form action='/user/logout' method='POST'>
+                    <input type='hidden' name='csrf_token' value={ csrfToken }/>
+                    <button>Logout</button>
+                </form>
+            </div>
+        } else {
+            <div>
+                <a href='/user/login'>Login</a>
+            </div>
+        }
+    <div>
+        <a href='/orders'>Orders</a>
+    </div>
+    <div>
+        <a href='/wallet'>Wallet</a>
+    </div>
     </nav>
 }
