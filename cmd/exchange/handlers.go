@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
 )
 
@@ -12,39 +14,30 @@ func (app *application) PlaceOrderPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {}
 
 func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
-	symbols := make([]pages.SymbolData, 0)
-
-	BTCdata := pages.SymbolData{
-		Name:         "BTCUSDT",
-		Price:        65000,
-		OneDayChange: "3.2%",
-		Volume:       4.54,
+	symbolListProps, err := app.fetchCoinMarket()
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-
-	ETHdata := pages.SymbolData{
-		Name:         "ETHUSDT",
-		Price:        4000,
-		OneDayChange: "4.5%",
-		Volume:       8343.00,
-	}
-
-	symbols = append(symbols, BTCdata)
-	symbols = append(symbols, ETHdata)
 
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.MarketsPage(symbols, "", true, "")
+		return pages.MarketsPage(symbolListProps, "", true, "")
 	})
 }
 
 func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
-	BTCdata := pages.SymbolData{
-		Name:         "BTCUSDT",
-		Price:        65000,
-		OneDayChange: "3.2%",
-		Volume:       4.54,
+	// TODO: make sure symbolName is same as coingecko api call
+	symbolID := chi.URLParam(r, "symbol")
+
+	var symbolData pages.CoinMarketProps
+	symbolData, err := app.FetchSymbolData(symbolID)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.TradePage(BTCdata, "", true, "")
+		return pages.TradePage(symbolData, "", true, "")
 	})
 }
 

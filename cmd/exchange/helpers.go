@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-playground/form"
 	"github.com/justinas/nosurf"
+	"github.com/kayden-vs/zaraba/ui/html/pages"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -69,4 +71,50 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 		return false
 	}
 	return isAuthenticated
+}
+
+func (app *application) fetchCoinMarket() ([]pages.CoinMarketProps, error) {
+	url := "https://api.coingecko.com/api/v3/coins/markets" +
+		"?vs_currency=usd" +
+		"&order=market_cap_desc" +
+		"&per_page=10" +
+		"&page=1" +
+		"&price_change_percentage=24h"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var markets []pages.CoinMarketProps
+	if err := json.NewDecoder(resp.Body).Decode(&markets); err != nil {
+		return nil, err
+	}
+
+	return markets, nil
+}
+
+func (app *application) FetchSymbolData(symbolID string) (pages.CoinMarketProps, error) {
+	url := "https://api.coingecko.com/api/v3/coins/markets" +
+		"?vs_currency=usd" +
+		"&ids=" + symbolID +
+		"&price_change_percentage=24h"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return pages.CoinMarketProps{}, err
+	}
+	defer resp.Body.Close()
+	symbolData := []pages.CoinMarketProps{}
+
+	if err := json.NewDecoder(resp.Body).Decode(&symbolData); err != nil {
+		return pages.CoinMarketProps{}, err
+	}
+
+	if len(symbolData) == 0 {
+		return pages.CoinMarketProps{}, fmt.Errorf("no data found for symbol: %s", symbolID)
+	}
+
+	return symbolData[0], nil
 }

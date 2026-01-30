@@ -3,18 +3,20 @@ package pages
 import "github.com/kayden-vs/zaraba/ui/html"
 import "strings"
 
-type SymbolData struct {
-    Name string
-    Price int64
-    OneDayChange string
-    Volume float64 
+type CoinMarketProps struct {
+	ID        string  `json:"id"`
+	Symbol    string  `json:"symbol"`
+	Name      string  `json:"name"`
+	Price     float64 `json:"current_price"`
+	Volume    float64 `json:"total_volume"`
+	Change24h float64 `json:"price_change_percentage_24h"`
 }
 
-templ MarketsPage(symbols []SymbolData, flash string, isAuthenticated bool, csrfToken string) {
+templ MarketsPage(symbols []CoinMarketProps, flash string, isAuthenticated bool, csrfToken string) {
     @html.Base("Markets", flash, isAuthenticated, csrfToken, MarketsBody(symbols))
 }
 
-templ MarketsBody(symbols []SymbolData) {
+templ MarketsBody(symbols []CoinMarketProps) {
     if symbols != nil {
         <table>
         <tr>
@@ -25,9 +27,9 @@ templ MarketsBody(symbols []SymbolData) {
         </tr>
         for _,symbol := range symbols{
         <tr>
-            <td><a href={"/trade/" + strings.ToLower(symbol.Name)}>{symbol.Name}</a></td>
+            <td><a href={"/trade/" + strings.ToLower(symbol.ID)}>{symbol.Name}</a></td>
             <td>{ symbol.Price }</td>
-            <td>{ symbol.OneDayChange }</td>
+            <td>{ symbol.Change24h }</td>
             <td>{ symbol.Volume }</td>
         </tr>
         }
