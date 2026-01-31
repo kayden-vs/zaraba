@@ -118,3 +118,21 @@ func (app *application) FetchSymbolData(symbolID string) (pages.CoinMarketProps,
 
 	return symbolData[0], nil
 }
+
+func GetTvSymbol(symbol string) string {
+	var SymbolMap = map[string]string{
+		"btc":   "BINANCE:BTCUSDT",
+		"eth":   "BINANCE:ETHUSDT",
+		"usdt":  "BINANCE:USDTUSD",
+		"bnb":   "BINANCE:BNBUSDT",
+		"xrp":   "BINANCE:XRPUSDT",
+		"usdc":  "BINANCE:USDCUSDT",
+		"sol":   "BINANCE:SOLUSDT",
+		"trx":   "BINANCE:TRXUSDT",
+		"steth": "BINANCE:STETHUSDT",
+		"doge":  "BINANCE:DOGEUSDT",
+	}
+
+	tvSymbol := SymbolMap[symbol]
+	return tvSymbol
+}

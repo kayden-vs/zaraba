@@ -3,32 +3,15 @@ package pages
 import "github.com/kayden-vs/zaraba/ui/html"
 import "strings"
 
-var SymbolMap = map[string]string{
-	"btc":   "BINANCE:BTCUSDT",
-	"eth":   "BINANCE:ETHUSDT",
-	"usdt":  "BINANCE:USDTUSD",
-	"bnb":   "BINANCE:BNBUSDT",
-	"xrp":   "BINANCE:XRPUSDT",
-	"usdc":  "BINANCE:USDCUSDT",
-	"sol":   "BINANCE:SOLUSDT",
-	"trx":   "BINANCE:TRXUSDT",
-	"steth": "BINANCE:STETHUSDT",
-	"doge":  "BINANCE:DOGEUSDT",
+templ TradePage(symbol CoinMarketProps ,tvSymbol ,flash string, isAuthenticated bool, csrfToken string) {
+    @html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol, tvSymbol) )
 }
 
-templ TradePage(symbol CoinMarketProps ,flash string, isAuthenticated bool, csrfToken string) {
-    @html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol) )
-}
-
-templ TradePageBody(symbol CoinMarketProps) {
+templ TradePageBody(symbol CoinMarketProps, tvSymbol string) {
     <div class="heading">
         <h1> { strings.ToUpper(symbol.Name) }</h1>
         <h1>{ symbol.Price } </h1>
     </div>
-
-// coinGecko sym -> Tradingview Symbol
-    tvSymbol := SymbolMap[strings.ToLower(symbol.Symbol)]
-    tvSymbolOptimized = fmt.Sprintf(`"%s"`, tvSymbol)
 
 <!-- TradingView Widget BEGIN -->
 <div class="tradingview-widget-container">
@@ -48,7 +31,7 @@ templ TradePageBody(symbol CoinMarketProps) {
   "locale": "en",
   "save_image": true,
   "style": "1",
-  "symbol": tvSymbolOptimized,
+  "symbol": {{ tvSymbol }},
   "theme": "dark",
   "timezone": "Asia/Kolkata",
   "backgroundColor": "#0F0F0F",

@@ -11,20 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import "github.com/kayden-vs/zaraba/ui/html"
 import "strings"
 
-var SymbolMap = map[string]string{
-	"btc":   "BINANCE:BTCUSDT",
-	"eth":   "BINANCE:ETHUSDT",
-	"usdt":  "BINANCE:USDTUSD",
-	"bnb":   "BINANCE:BNBUSDT",
-	"xrp":   "BINANCE:XRPUSDT",
-	"usdc":  "BINANCE:USDCUSDT",
-	"sol":   "BINANCE:SOLUSDT",
-	"trx":   "BINANCE:TRXUSDT",
-	"steth": "BINANCE:STETHUSDT",
-	"doge":  "BINANCE:DOGEUSDT",
-}
-
-func TradePage(symbol CoinMarketProps, flash string, isAuthenticated bool, csrfToken string) templ.Component {
+func TradePage(symbol CoinMarketProps, tvSymbol, flash string, isAuthenticated bool, csrfToken string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -45,7 +32,7 @@ func TradePage(symbol CoinMarketProps, flash string, isAuthenticated bool, csrfT
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol, tvSymbol)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -53,7 +40,7 @@ func TradePage(symbol CoinMarketProps, flash string, isAuthenticated bool, csrfT
 	})
 }
 
-func TradePageBody(symbol CoinMarketProps) templ.Component {
+func TradePageBody(symbol CoinMarketProps, tvSymbol string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -81,7 +68,7 @@ func TradePageBody(symbol CoinMarketProps) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Name))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 25, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 12, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -94,13 +81,25 @@ func TradePageBody(symbol CoinMarketProps) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Price)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 26, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 13, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</h1></div>tvSymbol := SymbolMap[strings.ToLower(symbol.Symbol)] tvSymbolOptimized = fmt.Sprintf(`\"%s\"`, tvSymbol)<!-- TradingView Widget BEGIN --><div class=\"tradingview-widget-container\"><div class=\"tradingview-widget-container__widget\"></div><div class=\"tradingview-widget-copyright\"><a href=\"https://www.tradingview.com/symbols/BTCUSDT/?exchange=BINANCE\" rel=\"noopener nofollow\" target=\"_blank\"><span class=\"blue-text\">BTCUSDT price</span></a><span class=\"trademark\">by TradingView</span></div><script type=\"text/javascript\" src=\"https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js\" async>\n  {\n  \"allow_symbol_change\": true,\n  \"calendar\": false,\n  \"details\": false,\n  \"hide_side_toolbar\": true,\n  \"hide_top_toolbar\": false,\n  \"hide_legend\": false,\n  \"hide_volume\": false,\n  \"hotlist\": false,\n  \"interval\": \"15\",\n  \"locale\": \"en\",\n  \"save_image\": true,\n  \"style\": \"1\",\n  \"symbol\": tvSymbolOptimized,\n  \"theme\": \"dark\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"backgroundColor\": \"#0F0F0F\",\n  \"gridColor\": \"rgba(242, 242, 242, 0.06)\",\n  \"watchlist\": [],\n  \"withdateranges\": false,\n  \"compareSymbols\": [],\n  \"studies\": [],\n  \"width\": 980,\n  \"height\": 610\n}\n  </script></div><!-- TradingView Widget END -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</h1></div><!-- TradingView Widget BEGIN --><div class=\"tradingview-widget-container\"><div class=\"tradingview-widget-container__widget\"></div><div class=\"tradingview-widget-copyright\"><a href=\"https://www.tradingview.com/symbols/BTCUSDT/?exchange=BINANCE\" rel=\"noopener nofollow\" target=\"_blank\"><span class=\"blue-text\">BTCUSDT price</span></a><span class=\"trademark\">by TradingView</span></div><script type=\"text/javascript\" src=\"https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js\" async>\n  {\n  \"allow_symbol_change\": true,\n  \"calendar\": false,\n  \"details\": false,\n  \"hide_side_toolbar\": true,\n  \"hide_top_toolbar\": false,\n  \"hide_legend\": false,\n  \"hide_volume\": false,\n  \"hotlist\": false,\n  \"interval\": \"15\",\n  \"locale\": \"en\",\n  \"save_image\": true,\n  \"style\": \"1\",\n  \"symbol\": ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var5, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(tvSymbol)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 34, Col: 23}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, ",\n  \"theme\": \"dark\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"backgroundColor\": \"#0F0F0F\",\n  \"gridColor\": \"rgba(242, 242, 242, 0.06)\",\n  \"watchlist\": [],\n  \"withdateranges\": false,\n  \"compareSymbols\": [],\n  \"studies\": [],\n  \"width\": 980,\n  \"height\": 610\n}\n  </script></div><!-- TradingView Widget END -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

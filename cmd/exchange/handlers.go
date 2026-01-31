@@ -36,8 +36,10 @@ func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tvSymbol := GetTvSymbol(symbolData.Symbol)
+
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.TradePage(symbolData, "", true, "")
+		return pages.TradePage(symbolData, tvSymbol, "", true, "")
 	})
 }
 
