@@ -13,6 +13,7 @@ func (app *application) routes() http.Handler {
 
 	r.Use(app.sessionManager.LoadAndSave)
 	r.Use(noSurf)
+	r.Use(app.authenticate)
 
 	staticFS, err := fs.Sub(ui.Files, "static")
 	if err != nil {

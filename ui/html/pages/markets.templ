@@ -30,7 +30,7 @@ templ MarketsBody(symbols []CoinMarketProps) {
         <tr>
             <td><a href={"/trade/" + strings.ToLower(symbol.ID)}>{symbol.Name}</a></td>
             <td>{ symbol.Price }</td>
-            <td>{ symbol.Change24h }</td>
+            <td>{ fmt.Sprintf("%.3f", symbol.Change24h) }</td>
             <td>{ FormatNumberShort(symbol.Volume)}</td>
         </tr>
         }

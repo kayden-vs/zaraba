@@ -121,9 +121,9 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
-				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Change24h)
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.3f", symbol.Change24h))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 33, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 33, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
