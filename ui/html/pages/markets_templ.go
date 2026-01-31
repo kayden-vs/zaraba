@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/kayden-vs/zaraba/ui/html"
 import "strings"
+import "fmt"
 
 type CoinMarketProps struct {
 	ID        string  `json:"id"`
@@ -83,7 +84,7 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs("/trade/" + strings.ToLower(symbol.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 30, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 31, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -96,7 +97,7 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 30, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 31, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -109,7 +110,7 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Price)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 31, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 32, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -122,7 +123,7 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Change24h)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 32, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 33, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -133,9 +134,9 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Volume)
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(FormatNumberShort(symbol.Volume))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 33, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 34, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -158,6 +159,21 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 		}
 		return nil
 	})
+}
+
+func FormatNumberShort(n float64) string {
+	switch {
+	case n >= 1e12:
+		return fmt.Sprintf("%.2fT", n/1e12)
+	case n >= 1e9:
+		return fmt.Sprintf("%.2fB", n/1e9)
+	case n >= 1e6:
+		return fmt.Sprintf("%.2fM", n/1e6)
+	case n >= 1e3:
+		return fmt.Sprintf("%.2fK", n/1e3)
+	default:
+		return fmt.Sprintf("%.2f", n)
+	}
 }
 
 var _ = templruntime.GeneratedTemplate

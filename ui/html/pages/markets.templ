@@ -2,6 +2,7 @@ package pages
 
 import "github.com/kayden-vs/zaraba/ui/html"
 import "strings"
+import "fmt"
 
 type CoinMarketProps struct {
 	ID        string  `json:"id"`
@@ -30,11 +31,26 @@ templ MarketsBody(symbols []CoinMarketProps) {
             <td><a href={"/trade/" + strings.ToLower(symbol.ID)}>{symbol.Name}</a></td>
             <td>{ symbol.Price }</td>
             <td>{ symbol.Change24h }</td>
-            <td>{ symbol.Volume }</td>
+            <td>{ FormatNumberShort(symbol.Volume)}</td>
         </tr>
         }
         </table>
     }else{
         <p>Theres nothing to see here... yet!</p>
     }
+}
+
+func FormatNumberShort(n float64) string {
+	switch {
+	case n >= 1e12:
+		return fmt.Sprintf("%.2fT", n/1e12)
+	case n >= 1e9:
+		return fmt.Sprintf("%.2fB", n/1e9)
+	case n >= 1e6:
+		return fmt.Sprintf("%.2fM", n/1e6)
+	case n >= 1e3:
+		return fmt.Sprintf("%.2fK", n/1e3)
+	default:
+		return fmt.Sprintf("%.2f", n)
+	}
 }
