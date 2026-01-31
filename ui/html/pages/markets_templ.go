@@ -72,7 +72,7 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if symbols != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<table><tr><th>Symbol</th><th>Price</th><th>24h Change</th><th>Volume</th></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<table><tr><th>Symbol</th><th>Price</th><th>24h Change</th><th>Market Cap</th></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

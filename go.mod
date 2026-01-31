@@ -6,6 +6,7 @@ require (
 	github.com/a-h/templ v0.3.977
 	github.com/alexedwards/scs/postgresstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
+	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/justinas/nosurf v1.2.0

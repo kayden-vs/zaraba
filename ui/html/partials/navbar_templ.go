@@ -57,7 +57,7 @@ func NavBar(isAuthenticated bool, csrfToken string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div><a href=\"/orders\">Orders</a></div><div><a href=\"/wallet\">Wallet</a></div></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div><a href=\"/orders\">Orders</a></div><div><a href=\"/user/wallet\">Wallet</a></div></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,0 +1,13 @@
+package pages
+
+import "github.com/kayden-vs/zaraba/ui/html"
+
+templ WalletPage(Totalbalance int64,LockedAmount int64, flash string, isAuthenticated bool, csrfToken string) {
+    @html.Base("Wallet", flash, isAuthenticated, csrfToken, WalletContent(Totalbalance, LockedAmount))
+}
+
+templ WalletContent(balance, LockedAmount int64){
+    <h1>Balance: { balance }</h1>
+    <h2> Available Balance: { balance - LockedAmount }</h2>
+    <h2> In trade (Locked): { LockedAmount }</h2>
+}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -11,6 +12,10 @@ import (
 	"github.com/kayden-vs/zaraba/internal/validator"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
 )
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
 
 func (app *application) PlaceOrderPost(w http.ResponseWriter, r *http.Request) {}
 
@@ -198,6 +203,14 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/markets", http.StatusSeeOther)
 }
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {
+	wallet := Wallet{
+		UserID:    2,
+		Balance:   50,
+		Locked:    10,
+		UpdatedAt: time.Now(),
+	}
+	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
+		return pages.WalletPage(wallet.Balance, wallet.Locked, flash, isAuthenticated, csrfToken)
+	})
 }
