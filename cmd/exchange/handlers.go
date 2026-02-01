@@ -204,7 +204,8 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {
-	wallet := Wallet{
+	// TODO: fetch wallet data from database according to the user ID
+	wallet := models.Wallet{
 		UserID:    2,
 		Balance:   50,
 		Locked:    10,

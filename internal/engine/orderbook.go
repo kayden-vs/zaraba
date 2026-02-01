@@ -19,8 +19,8 @@ type Order struct {
 type Match struct {
 	Ask        *Order
 	Bid        *Order
-	SizeFilled float64
-	Price      int64
+	SizeFilled int64 // Filled quantity in base asset integer units
+	Price      int64 // Price in micro-USDT (1 USDT = 1,000,000 units)
 }
 
 func NewLimit(price int64) *Limit {
@@ -32,22 +32,22 @@ func NewLimit(price int64) *Limit {
 	}
 }
 
-func NewOrder(bid bool, size float64) *Order {
+func NewOrder(bid bool, size int64) *Order {
 	return &Order{
 		Order: &pb.Order{
 			Bid:       bid,
-			Size:      float64(size),
+			Size:      size,
 			Timestamp: time.Now().UnixNano(),
 		},
 	}
 }
 
 func (o *Order) String() string {
-	return fmt.Sprintf("[size: %.2f]", o.Size)
+	return fmt.Sprintf("[size: %d]", o.Size)
 }
 
 func (o *Order) IsFilled() bool {
-	return o.Size == 0.0
+	return o.Size == 0
 }
 
 func (l *Limit) AddOrder(o *Order) {
@@ -104,7 +104,7 @@ func (l *Limit) fillOrder(a, b *Order) Match {
 	var (
 		bid        *Order
 		ask        *Order
-		sizeFilled float64
+		sizeFilled int64
 	)
 
 	if a.Bid {
@@ -118,11 +118,11 @@ func (l *Limit) fillOrder(a, b *Order) Match {
 	if a.Size >= b.Size {
 		a.Size -= b.Size
 		sizeFilled = b.Size
-		b.Size = 0.0
+		b.Size = 0
 	} else {
 		b.Size -= a.Size
 		sizeFilled = a.Size
-		a.Size = 0.0
+		a.Size = 0
 	}
 
 	return Match{
@@ -156,7 +156,7 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 
 	if o.Bid {
 		if o.Size > ob.AskTotalVolume() {
-			panic(fmt.Errorf("Not enough volume [size: %.2f] for market order [size: %.2f]", ob.AskTotalVolume(), o.Size))
+			panic(fmt.Errorf("Not enough volume [size: %d] for market order [size: %d]", ob.AskTotalVolume(), o.Size))
 		}
 
 		for i := 0; i < len(ob.Asks); i++ {
@@ -170,7 +170,7 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 		}
 	} else {
 		if o.Size > ob.BidTotalVolume() {
-			panic(fmt.Errorf("Not enough volume [size: %.2f] for market order [size: %.2f]", ob.BidTotalVolume(), o.Size))
+			panic(fmt.Errorf("Not enough volume [size: %d] for market order [size: %d]", ob.BidTotalVolume(), o.Size))
 		}
 
 		for i := 0; i < len(ob.Bids); i++ {
@@ -255,8 +255,8 @@ func (ob *Orderbook) CancelOrder(o *Order) {
 	}
 }
 
-func (ob *Orderbook) BidTotalVolume() float64 {
-	var totalVolume float64
+func (ob *Orderbook) BidTotalVolume() int64 {
+	var totalVolume int64
 
 	for i := 0; i < len(ob.Bids); i++ {
 		totalVolume += ob.Bids[i].TotalVolume
@@ -265,8 +265,8 @@ func (ob *Orderbook) BidTotalVolume() float64 {
 	return totalVolume
 }
 
-func (ob *Orderbook) AskTotalVolume() float64 {
-	var totalVolume float64
+func (ob *Orderbook) AskTotalVolume() int64 {
+	var totalVolume int64
 
 	for i := 0; i < len(ob.Asks); i++ {
 		totalVolume += ob.Asks[i].TotalVolume
