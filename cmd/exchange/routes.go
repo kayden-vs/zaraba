@@ -15,7 +15,7 @@ func (app *application) routes() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
-	r.Use(secureHeaders)
+	// r.Use(secureHeaders)
 
 	staticFS, err := fs.Sub(ui.Files, "static")
 	if err != nil {
