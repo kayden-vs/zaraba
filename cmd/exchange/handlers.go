@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -204,13 +203,14 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: fetch wallet data from database according to the user ID
-	wallet := models.Wallet{
-		UserID:    2,
-		Balance:   50,
-		Locked:    10,
-		UpdatedAt: time.Now(),
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	wallet, err := app.wallet.GetWallet(int64(userID))
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
+
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
 		return pages.WalletPage(wallet.Balance, wallet.Locked, flash, isAuthenticated, csrfToken)
 	})

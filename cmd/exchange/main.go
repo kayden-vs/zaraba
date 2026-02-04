@@ -20,6 +20,7 @@ type application struct {
 	infoLog        *log.Logger
 	formDecoder    *form.Decoder
 	users          models.UserModelInterface
+	wallet         models.WalletModelInterface
 	sessionManager *scs.SessionManager
 }
 
@@ -48,6 +49,7 @@ func main() {
 		infoLog:        infoLog,
 		formDecoder:    formDecoder,
 		users:          &models.UserModel{DB: db},
+		wallet:         &models.WalletModel{DB: db},
 		sessionManager: sessionManager,
 	}
 

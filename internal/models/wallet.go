@@ -12,10 +12,11 @@ import (
 type WalletModelInterface interface {
 	CreditWallet(userID int64, amount int64) (*Wallet, error)
 	DebitWallet(userID int64, amount int64) (*Wallet, error)
-	LocketAmount(userID, amount int64) (*Wallet, error)
+	LockAmount(userID, amount int64) (*Wallet, error)
 	UnlockAmount(userID, amount int64) (*Wallet, error)
 	GetBalance(userID int64) (int64, error)
 	GetTotalBalance(userID int64) (int64, error)
+	GetWallet(userID int64) (*Wallet, error)
 }
 
 type Wallet struct {
