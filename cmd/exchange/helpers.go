@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"runtime/debug"
 
 	"github.com/a-h/templ"
@@ -79,7 +80,8 @@ func (app *application) fetchCoinMarket() ([]pages.CoinMarketProps, error) {
 		"&order=market_cap_desc" +
 		"&per_page=10" +
 		"&page=1" +
-		"&price_change_percentage=24h"
+		"&price_change_percentage=24h" +
+		fmt.Sprintf("&x_cg_demo_api_key=%s", os.Getenv("API_KEY"))
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -99,7 +101,8 @@ func (app *application) FetchSymbolData(symbolID string) (pages.CoinMarketProps,
 	url := "https://api.coingecko.com/api/v3/coins/markets" +
 		"?vs_currency=usd" +
 		"&ids=" + symbolID +
-		"&price_change_percentage=24h"
+		"&price_change_percentage=24h" +
+		fmt.Sprintf("&x_cg_demo_api_key=%s", os.Getenv("API_KEY"))
 
 	resp, err := http.Get(url)
 	if err != nil {
