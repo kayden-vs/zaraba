@@ -4,10 +4,10 @@ import "github.com/kayden-vs/zaraba/ui/html"
 import "fmt"
 
 templ WalletPage(Totalbalance int64, LockedAmount int64, flash string, isAuthenticated bool, csrfToken string) {
-    @html.Base("Wallet", flash, isAuthenticated, csrfToken, WalletContent(Totalbalance, LockedAmount))
+    @html.Base("Wallet", flash, isAuthenticated, csrfToken, WalletContent(Totalbalance, LockedAmount, csrfToken))
 }
 
-templ WalletContent(balance, LockedAmount int64){
+templ WalletContent(balance, LockedAmount int64, csrfToken string){
     <div class="wallet-container">
         <div class="wallet-header">
             <h1>Wallet</h1>
@@ -39,7 +39,14 @@ templ WalletContent(balance, LockedAmount int64){
         </div>
 
         <div class="wallet-actions">
-            <a href="/trade/bitcoin" class="wallet-action-btn primary">
+            <a href="#deposit-section" class="wallet-action-btn primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Deposit Funds
+            </a>
+            <a href="/trade/bitcoin" class="wallet-action-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                     <polyline points="17 6 23 6 23 12"></polyline>
@@ -64,6 +71,42 @@ templ WalletContent(balance, LockedAmount int64){
                 </svg>
                 Markets
             </a>
+        </div>
+
+        <!-- Deposit Section -->
+        <div id="deposit-section" class="card mt-8">
+            <div class="card-header">
+                <h3>Deposit Funds</h3>
+                <p class="card-subtitle">Add funds to your wallet to start trading</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/api/wallet/deposit" class="deposit-form">
+                    <input type="hidden" name="csrf_token" value={ csrfToken } />
+                    <div class="form-row">
+                        <div class="form-group-inline">
+                            <label for="depositAmount" class="form-label">Amount (USDT)</label>
+                            <input 
+                                type="number" 
+                                id="depositAmount" 
+                                name="amount" 
+                                step="0.01" 
+                                min="1" 
+                                placeholder="Enter amount"
+                                required
+                                class="form-input"
+                            />
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Confirm Deposit
+                        </button>
+                    </div>
+                    <p class="form-hint">Minimum deposit: $1.00 USDT</p>
+                </form>
+            </div>
         </div>
 
         <!-- Portfolio summary section -->

@@ -17,6 +17,7 @@ type WalletModelInterface interface {
 	GetBalance(userID int64) (int64, error)
 	GetTotalBalance(userID int64) (int64, error)
 	GetWallet(userID int64) (*Wallet, error)
+	CreateWallet(userID int64) error
 }
 
 type Wallet struct {
@@ -174,4 +175,16 @@ func (w *WalletModel) GetWallet(userID int64) (*Wallet, error) {
 	}
 
 	return wallet, nil
+}
+
+func (w *WalletModel) CreateWallet(userID int64) error {
+	stmt := `INSERT INTO wallets (user_id, balance, locked, updated_at)
+        VALUES ($1, 0, 0, $2)`
+
+	_, err := w.DB.Exec(stmt, userID, time.Now())
+	if err != nil {
+		return fmt.Errorf("failed to create wallet: %w", err)
+	}
+
+	return nil
 }

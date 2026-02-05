@@ -127,6 +127,13 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
+	// Create wallet for the new user
+	err = app.wallet.CreateWallet(int64(id))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	http.Redirect(w, r, "/markets", http.StatusSeeOther)
 }
 
@@ -219,4 +226,8 @@ func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
 		return pages.WalletPage(wallet.Balance, wallet.Locked, flash, isAuthenticated, csrfToken)
 	})
+}
+
+func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request) {
+
 }
