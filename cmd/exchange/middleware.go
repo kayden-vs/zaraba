@@ -13,10 +13,10 @@ func secureHeaders(next http.Handler) http.Handler {
 		// Relaxed CSP for trade pages that need TradingView widget
 		if strings.HasPrefix(r.URL.Path, "/trade/") {
 			w.Header().Set("Content-Security-Policy",
-				"default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; frame-src https://www.tradingview.com; connect-src https://*.tradingview.com wss://*.tradingview.com")
+				"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://s3.tradingview.com https://*.tradingview.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; frame-src https://*.tradingview.com; connect-src 'self' https://*.tradingview.com wss://*.tradingview.com; img-src 'self' data: https://*.tradingview.com")
 		} else {
 			w.Header().Set("Content-Security-Policy",
-				"default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
+				"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com")
 		}
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
