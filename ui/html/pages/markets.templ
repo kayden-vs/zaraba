@@ -8,6 +8,7 @@ type CoinMarketProps struct {
 	ID        string  `json:"id"`
 	Symbol    string  `json:"symbol"`
 	Name      string  `json:"name"`
+	Base      string  `json:"base"`
 	Price     float64 `json:"current_price"`
 	Volume    float64 `json:"total_volume"`
 	Change24h float64 `json:"price_change_percentage_24h"`
@@ -18,26 +19,125 @@ templ MarketsPage(symbols []CoinMarketProps, flash string, isAuthenticated bool,
 }
 
 templ MarketsBody(symbols []CoinMarketProps) {
-    if symbols != nil {
-        <table>
-        <tr>
-            <th>Symbol</th>
-            <th>Price</th>
-            <th>24h Change</th>
-            <th>Market Cap</th>
-        </tr>
-        for _,symbol := range symbols{
-        <tr>
-            <td><a href={"/trade/" + strings.ToLower(symbol.ID)}>{symbol.Name}</a></td>
-            <td>{ symbol.Price }</td>
-            <td>{ fmt.Sprintf("%.3f", symbol.Change24h) }</td>
-            <td>{ FormatNumberShort(symbol.Volume)}</td>
-        </tr>
+    <div class="markets-container">
+        <div class="markets-header">
+            <h1>Markets</h1>
+            <div class="markets-search">
+                <input type="text" id="market-search" placeholder="Search markets..." autocomplete="off"/>
+            </div>
+        </div>
+
+        <div class="market-filters">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="gainers">Top Gainers</button>
+            <button class="filter-tab" data-filter="losers">Top Losers</button>
+        </div>
+
+        if symbols != nil && len(symbols) > 0 {
+            <div class="markets-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Market</th>
+                            <th>Price</th>
+                            <th>24h Change</th>
+                            <th>24h Volume</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="markets-tbody">
+                        for _, symbol := range symbols {
+                            <tr class="clickable market-row" data-symbol={ strings.ToLower(symbol.ID) } data-change={ fmt.Sprintf("%.4f", symbol.Change24h) }>
+                                <td>
+                                    <a href={ templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)) }>
+                                        <div class="symbol-cell">
+                                            <div class="symbol-icon">{ getSymbolInitial(symbol.Symbol) }</div>
+                                            <div>
+                                                <div class="symbol-name">{ symbol.Name }</div>
+                                                <div class="symbol-ticker">{ strings.ToUpper(symbol.Symbol) }/USDT</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </td>
+                                <td class="price-cell mono">${ fmt.Sprintf("%.2f", symbol.Price) }</td>
+                                if symbol.Change24h >= 0 {
+                                    <td class="change-cell positive mono">+{ fmt.Sprintf("%.2f", symbol.Change24h) }%</td>
+                                } else {
+                                    <td class="change-cell negative mono">{ fmt.Sprintf("%.2f", symbol.Change24h) }%</td>
+                                }
+                                <td class="volume-cell mono">{ FormatNumberShort(symbol.Volume) }</td>
+                                <td>
+                                    <a href={ templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)) } class="btn btn-sm btn-ghost">Trade</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        } else {
+            <div class="empty-state">
+                <p>No markets available at the moment.</p>
+            </div>
         }
-        </table>
-    }else{
-        <p>Theres nothing to see here... yet!</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('market-search');
+            const rows = document.querySelectorAll('.market-row');
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                rows.forEach(row => {
+                    const symbol = row.dataset.symbol;
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm) || symbol.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            // Filter tabs
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    rows.forEach(row => {
+                        const change = parseFloat(row.dataset.change);
+                        row.style.display = '';
+                        
+                        if (filter === 'gainers' && change < 0) {
+                            row.style.display = 'none';
+                        } else if (filter === 'losers' && change >= 0) {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Row click navigation
+            rows.forEach(row => {
+                row.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
+                        window.location.href = '/trade/' + this.dataset.symbol;
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+func getSymbolInitial(symbol string) string {
+    if len(symbol) > 0 {
+        return strings.ToUpper(string(symbol[0]))
     }
+    return "?"
 }
 
 func FormatNumberShort(n float64) string {

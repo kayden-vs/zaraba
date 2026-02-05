@@ -33,8 +33,11 @@ func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
 	symbolID := chi.URLParam(r, "symbol")
 
+	// chart
 	var symbolData pages.CoinMarketProps
 	symbolData, err := app.FetchSymbolData(symbolID)
 	if err != nil {
@@ -44,8 +47,10 @@ func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
 
 	tvSymbol := GetTvSymbol(symbolData.Symbol)
 
+	// trading panel
+
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.TradePage(symbolData, tvSymbol, flash, isAuthenticated, csrfToken)
+		return pages.TradePage(symbolData, tvSymbol, int64(userID), flash, isAuthenticated, csrfToken)
 	})
 }
 

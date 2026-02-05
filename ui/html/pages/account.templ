@@ -4,27 +4,36 @@ import "github.com/kayden-vs/zaraba/internal/models"
 import "github.com/kayden-vs/zaraba/ui/html"
 
 templ AccountPage(user *models.User, flash string, csrfToken string){
-    @html.Base("Account", flash , true, csrfToken, accountContent(user))
+    @html.Base("Account", flash, true, csrfToken, accountContent(user))
 }
 
 templ accountContent(user *models.User) {
-    <h2>Your Account</h2>
-    <table>
-        <tr>
-            <th>Name</th>
-            <th> { user.Name }</th>
-        </tr>
-        <tr>
-            <th>Email</th>
-            <th>{ user.Email }</th>
-        </tr>
-        <tr>
-            <th>Joined</th>
-            <th>{ user.Created.Format("January 2, 2006") }</th>
-        </tr>
-    </table>
-    <br>
-    <div style="margin-top: 1.5rem;">
-        <a href="/account/password/update" class="button">Change password</a>
+    <div class="account-container">
+        <div class="account-header">
+            <h2>Your Account</h2>
+        </div>
+
+        <div class="account-card">
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Name</th>
+                        <td>{ user.Name }</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{ user.Email }</td>
+                    </tr>
+                    <tr>
+                        <th>Member Since</th>
+                        <td>{ user.Created.Format("January 2, 2006") }</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="account-actions">
+            <a href="/account/password/update" class="btn btn-primary">Change Password</a>
+        </div>
     </div>
 }
