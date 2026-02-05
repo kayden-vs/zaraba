@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
+	"github.com/kayden-vs/zaraba/internal/engine"
 	"github.com/kayden-vs/zaraba/internal/models"
 	"github.com/kayden-vs/zaraba/internal/validator"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
@@ -222,12 +224,36 @@ func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
 		return pages.WalletPage(wallet.Balance, wallet.Locked, flash, isAuthenticated, csrfToken)
 	})
 }
 
 func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request) {
+	// extract data
+	value := r.FormValue("amount")
+	amountUser, err := strconv.Atoi(value)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	amount := engine.PriceToInt(float64(amountUser))
 
+	// validate
+	if amount <= 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// add to wallet
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	_, err = app.wallet.CreditWallet(int64(userID), int64(amount))
+
+	// TODO: add to portfolio summary
+
+	// render flash message
+	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d added successfully!", amountUser))
+
+	http.Redirect(w, r, "/user/wallet", http.StatusSeeOther)
 }

@@ -1,7 +1,7 @@
 package pages
 
 import "github.com/kayden-vs/zaraba/ui/html"
-import "fmt"
+import "github.com/kayden-vs/zaraba/internal/engine"
 
 templ WalletPage(Totalbalance int64, LockedAmount int64, flash string, isAuthenticated bool, csrfToken string) {
     @html.Base("Wallet", flash, isAuthenticated, csrfToken, WalletContent(Totalbalance, LockedAmount, csrfToken))
@@ -18,21 +18,21 @@ templ WalletContent(balance, LockedAmount int64, csrfToken string){
             <div class="balance-card primary">
                 <span class="label">Total Balance</span>
                 <div>
-                    <span class="amount mono">{ formatWalletBalance(balance) }</span>
+                    <span class="amount mono">{ engine.FormatPrice(balance) }</span>
                     <span class="currency">USDT</span>
                 </div>
             </div>
             <div class="balance-card">
                 <span class="label">Available</span>
                 <div>
-                    <span class="amount mono">{ formatWalletBalance(balance - LockedAmount) }</span>
+                    <span class="amount mono">{ engine.FormatPrice(balance - LockedAmount) }</span>
                     <span class="currency">USDT</span>
                 </div>
             </div>
             <div class="balance-card locked">
                 <span class="label">In Orders</span>
                 <div>
-                    <span class="amount mono">{ formatWalletBalance(LockedAmount) }</span>
+                    <span class="amount mono">{ engine.FormatPrice(LockedAmount) }</span>
                     <span class="currency">USDT</span>
                 </div>
             </div>
@@ -135,17 +135,13 @@ templ WalletContent(balance, LockedAmount int64, csrfToken string){
                                     </div>
                                 </div>
                             </td>
-                            <td class="mono">{ formatWalletBalance(balance - LockedAmount) }</td>
-                            <td class="mono text-tertiary">{ formatWalletBalance(LockedAmount) }</td>
-                            <td class="mono font-medium">{ formatWalletBalance(balance) }</td>
+                            <td class="mono">{ engine.FormatPrice(balance - LockedAmount) }</td>
+                            <td class="mono text-tertiary">{ engine.FormatPrice(LockedAmount) }</td>
+                            <td class="mono font-medium">{ engine.FormatPrice(balance) }</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-}
-
-func formatWalletBalance(balance int64) string {
-    return fmt.Sprintf("%.2f", float64(balance)/100)
 }
