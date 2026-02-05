@@ -3,6 +3,7 @@ package pages
 import "github.com/kayden-vs/zaraba/ui/html"
 import "strings"
 import "fmt"
+import "github.com/kayden-vs/zaraba/internal/engine"
 
 templ TradePage(symbol CoinMarketProps ,tvSymbol string ,walletBalance int64, flash string, isAuthenticated bool, csrfToken string) {
     @html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol, tvSymbol, walletBalance))
@@ -141,7 +142,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 <!-- Available Margin Display -->
                 <div class="margin-info">
                     <span class="label">Available Balance</span>
-                    <span class="value mono" id="available-margin">{ formatBalance(walletBalance) } USDT</span>
+                    <span class="value mono" id="available-margin">{ engine.FormatPrice(walletBalance) } USDT</span>
                 </div>
 
                 <!-- Price Input (only for limit orders) -->
@@ -313,8 +314,4 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
             });
         })();
     </script>
-}
-
-func formatBalance(balance int64) string {
-    return fmt.Sprintf("%.2f", float64(balance)/100)
 }

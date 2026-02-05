@@ -49,10 +49,12 @@ func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
 
 	tvSymbol := GetTvSymbol(symbolData.Symbol)
 
+	balance, err := app.wallet.GetBalance(int64(userID))
+
 	// trading panel
 
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.TradePage(symbolData, tvSymbol, int64(userID), flash, isAuthenticated, csrfToken)
+		return pages.TradePage(symbolData, tvSymbol, balance, flash, isAuthenticated, csrfToken)
 	})
 }
 
