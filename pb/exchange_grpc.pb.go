@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Exchange_PlaceMarketOrder_FullMethodName = "/exchange.Exchange/PlaceMarketOrder"
-	Exchange_PlaceLimitOrder_FullMethodName  = "/exchange.Exchange/PlaceLimitOrder"
+	Exchange_PlaceMarketOrder_FullMethodName = "/pb.Exchange/PlaceMarketOrder"
+	Exchange_PlaceLimitOrder_FullMethodName  = "/pb.Exchange/PlaceLimitOrder"
 )
 
 // ExchangeClient is the client API for Exchange service.
@@ -142,7 +142,7 @@ func _Exchange_PlaceLimitOrder_Handler(srv interface{}, ctx context.Context, dec
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Exchange_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "exchange.Exchange",
+	ServiceName: "pb.Exchange",
 	HandlerType: (*ExchangeServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

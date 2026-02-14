@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package exchange;
+package pb;
 
 option go_package = "github.com/kayden-vs/zaraba/pb";
 

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -13,7 +14,9 @@ import (
 	"github.com/go-playground/form"
 	"github.com/kayden-vs/zaraba/internal/models"
 	"github.com/kayden-vs/zaraba/internal/service"
+	"github.com/kayden-vs/zaraba/pb"
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 )
 
 type application struct {
@@ -65,6 +68,23 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+
+	// Start gRPC server in a goroutine
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		errorLog.Fatalf("failed to listen on port 50051: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	exchangeServer := NewExchangeServer()
+	pb.RegisterExchangeServer(grpcServer, exchangeServer)
+
+	go func() {
+		infoLog.Printf("Starting gRPC server on :50051")
+		if err := grpcServer.Serve(lis); err != nil {
+			errorLog.Fatalf("failed to serve gRPC: %v", err)
+		}
+	}()
 
 	infoLog.Printf("Starting HTTP server on %s", *addr)
 	err = srv.ListenAndServe()

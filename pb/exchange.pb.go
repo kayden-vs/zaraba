@@ -22,13 +22,13 @@ const (
 )
 
 type Order struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// int64 id = 1;
-	// int64 price = 2;
-	Size          int64  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"` // Base asset quantity in integer units
-	Bid           bool   `protobuf:"varint,4,opt,name=bid,proto3" json:"bid,omitempty"`
-	Limit         *Limit `protobuf:"bytes,5,opt,name=limit,proto3" json:"limit,omitempty"`
-	Timestamp     int64  `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Price         int64                  `protobuf:"varint,2,opt,name=price,proto3" json:"price,omitempty"`
+	Size          int64                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"` // Base asset quantity in integer units
+	Bid           bool                   `protobuf:"varint,4,opt,name=bid,proto3" json:"bid,omitempty"`
+	Limit         *Limit                 `protobuf:"bytes,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -61,6 +61,20 @@ func (x *Order) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Order.ProtoReflect.Descriptor instead.
 func (*Order) Descriptor() ([]byte, []int) {
 	return file_exchange_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Order) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Order) GetPrice() int64 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
 }
 
 func (x *Order) GetSize() int64 {
@@ -275,29 +289,31 @@ var File_exchange_proto protoreflect.FileDescriptor
 
 const file_exchange_proto_rawDesc = "" +
 	"\n" +
-	"\x0eexchange.proto\x12\bexchange\"r\n" +
-	"\x05Order\x12\x12\n" +
+	"\x0eexchange.proto\x12\x02pb\"\x92\x01\n" +
+	"\x05Order\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
+	"\x05price\x18\x02 \x01(\x03R\x05price\x12\x12\n" +
 	"\x04size\x18\x03 \x01(\x03R\x04size\x12\x10\n" +
-	"\x03bid\x18\x04 \x01(\bR\x03bid\x12%\n" +
-	"\x05limit\x18\x05 \x01(\v2\x0f.exchange.LimitR\x05limit\x12\x1c\n" +
-	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"i\n" +
+	"\x03bid\x18\x04 \x01(\bR\x03bid\x12\x1f\n" +
+	"\x05limit\x18\x05 \x01(\v2\t.pb.LimitR\x05limit\x12\x1c\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"c\n" +
 	"\x05Limit\x12\x14\n" +
-	"\x05price\x18\x01 \x01(\x03R\x05price\x12'\n" +
-	"\x06orders\x18\x02 \x03(\v2\x0f.exchange.OrderR\x06orders\x12!\n" +
-	"\ftotal_volume\x18\x03 \x01(\x03R\vtotalVolume\"U\n" +
+	"\x05price\x18\x01 \x01(\x03R\x05price\x12!\n" +
+	"\x06orders\x18\x02 \x03(\v2\t.pb.OrderR\x06orders\x12!\n" +
+	"\ftotal_volume\x18\x03 \x01(\x03R\vtotalVolume\"O\n" +
 	"\x16PlaceLimitOrderRequest\x12\x14\n" +
-	"\x05price\x18\x01 \x01(\x03R\x05price\x12%\n" +
-	"\x05order\x18\x02 \x01(\v2\x0f.exchange.OrderR\x05order\"\x83\x01\n" +
-	"\x05Match\x12!\n" +
-	"\x03ask\x18\x01 \x01(\v2\x0f.exchange.OrderR\x03ask\x12!\n" +
-	"\x03bid\x18\x02 \x01(\v2\x0f.exchange.OrderR\x03bid\x12\x1e\n" +
+	"\x05price\x18\x01 \x01(\x03R\x05price\x12\x1f\n" +
+	"\x05order\x18\x02 \x01(\v2\t.pb.OrderR\x05order\"w\n" +
+	"\x05Match\x12\x1b\n" +
+	"\x03ask\x18\x01 \x01(\v2\t.pb.OrderR\x03ask\x12\x1b\n" +
+	"\x03bid\x18\x02 \x01(\v2\t.pb.OrderR\x03bid\x12\x1e\n" +
 	"\n" +
 	"sizeFilled\x18\x03 \x01(\x03R\n" +
 	"sizeFilled\x12\x14\n" +
-	"\x05price\x18\x04 \x01(\x03R\x05price2\x86\x01\n" +
-	"\bExchange\x124\n" +
-	"\x10PlaceMarketOrder\x12\x0f.exchange.Order\x1a\x0f.exchange.Match\x12D\n" +
-	"\x0fPlaceLimitOrder\x12 .exchange.PlaceLimitOrderRequest\x1a\x0f.exchange.MatchB Z\x1egithub.com/kayden-vs/zaraba/pbb\x06proto3"
+	"\x05price\x18\x04 \x01(\x03R\x05price2n\n" +
+	"\bExchange\x12(\n" +
+	"\x10PlaceMarketOrder\x12\t.pb.Order\x1a\t.pb.Match\x128\n" +
+	"\x0fPlaceLimitOrder\x12\x1a.pb.PlaceLimitOrderRequest\x1a\t.pb.MatchB Z\x1egithub.com/kayden-vs/zaraba/pbb\x06proto3"
 
 var (
 	file_exchange_proto_rawDescOnce sync.Once
@@ -313,21 +329,21 @@ func file_exchange_proto_rawDescGZIP() []byte {
 
 var file_exchange_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_exchange_proto_goTypes = []any{
-	(*Order)(nil),                  // 0: exchange.Order
-	(*Limit)(nil),                  // 1: exchange.Limit
-	(*PlaceLimitOrderRequest)(nil), // 2: exchange.PlaceLimitOrderRequest
-	(*Match)(nil),                  // 3: exchange.Match
+	(*Order)(nil),                  // 0: pb.Order
+	(*Limit)(nil),                  // 1: pb.Limit
+	(*PlaceLimitOrderRequest)(nil), // 2: pb.PlaceLimitOrderRequest
+	(*Match)(nil),                  // 3: pb.Match
 }
 var file_exchange_proto_depIdxs = []int32{
-	1, // 0: exchange.Order.limit:type_name -> exchange.Limit
-	0, // 1: exchange.Limit.orders:type_name -> exchange.Order
-	0, // 2: exchange.PlaceLimitOrderRequest.order:type_name -> exchange.Order
-	0, // 3: exchange.Match.ask:type_name -> exchange.Order
-	0, // 4: exchange.Match.bid:type_name -> exchange.Order
-	0, // 5: exchange.Exchange.PlaceMarketOrder:input_type -> exchange.Order
-	2, // 6: exchange.Exchange.PlaceLimitOrder:input_type -> exchange.PlaceLimitOrderRequest
-	3, // 7: exchange.Exchange.PlaceMarketOrder:output_type -> exchange.Match
-	3, // 8: exchange.Exchange.PlaceLimitOrder:output_type -> exchange.Match
+	1, // 0: pb.Order.limit:type_name -> pb.Limit
+	0, // 1: pb.Limit.orders:type_name -> pb.Order
+	0, // 2: pb.PlaceLimitOrderRequest.order:type_name -> pb.Order
+	0, // 3: pb.Match.ask:type_name -> pb.Order
+	0, // 4: pb.Match.bid:type_name -> pb.Order
+	0, // 5: pb.Exchange.PlaceMarketOrder:input_type -> pb.Order
+	2, // 6: pb.Exchange.PlaceLimitOrder:input_type -> pb.PlaceLimitOrderRequest
+	3, // 7: pb.Exchange.PlaceMarketOrder:output_type -> pb.Match
+	3, // 8: pb.Exchange.PlaceLimitOrder:output_type -> pb.Match
 	7, // [7:9] is the sub-list for method output_type
 	5, // [5:7] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
