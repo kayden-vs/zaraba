@@ -1,0 +1,73 @@
+package service
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/kayden-vs/zaraba/ui/html/pages"
+)
+
+type Hub struct {
+	Clients map[*websocket.Conn]bool
+	Mu      sync.Mutex
+}
+
+var CenterHub = Hub{
+	Clients: make(map[*websocket.Conn]bool),
+}
+
+var Upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+func StartPriceFetcher() {
+	for {
+		url := "https://api.coingecko.com/api/v3/coins/markets" +
+			"?vs_currency=usd" +
+			"&order=market_cap_desc" +
+			"&per_page=10" +
+			"&page=1" +
+			"&price_change_percentage=24h" +
+			fmt.Sprintf("&x_cg_demo_api_key=%s", os.Getenv("API_KEY"))
+
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Println("Error fetching price:", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		var symbolData []pages.CoinMarketProps
+		json.NewDecoder(resp.Body).Decode(&symbolData)
+		resp.Body.Close()
+
+		broadcast(symbolData)
+
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func broadcast(message []pages.CoinMarketProps) {
+	CenterHub.Mu.Lock()
+	defer CenterHub.Mu.Unlock()
+
+	data, err := json.Marshal(message)
+	if err != nil {
+		log.Println("Error marshaling message:", err)
+		return
+	}
+
+	for client := range CenterHub.Clients {
+		err := client.WriteMessage(websocket.TextMessage, data)
+		if err != nil {
+			client.Close()
+			delete(CenterHub.Clients, client)
+		}
+	}
+}

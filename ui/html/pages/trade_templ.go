@@ -130,122 +130,109 @@ func TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64)
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"stat-item\"><span class=\"stat-label\">24h Volume</span> <span class=\"stat-value\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><!-- TradingView Chart --><div class=\"tradingview-widget-container\"><div class=\"tradingview-widget-container__widget\"></div><script type=\"text/javascript\" src=\"https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js\" async>\n            {\n                \"allow_symbol_change\": true,\n                \"calendar\": false,\n                \"details\": false,\n                \"hide_side_toolbar\": true,\n                \"hide_top_toolbar\": false,\n                \"hide_legend\": false,\n                \"hide_volume\": false,\n                \"hotlist\": false,\n                \"interval\": \"15\",\n                \"locale\": \"en\",\n                \"save_image\": true,\n                \"style\": \"1\",\n                \"symbol\": ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(FormatNumberShort(symbol.Volume))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(tvSymbol)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 29, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 46, Col: 37}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span></div></div><!-- TradingView Chart --><div class=\"tradingview-widget-container\"><div class=\"tradingview-widget-container__widget\"></div><script type=\"text/javascript\" src=\"https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js\" async>\n            {\n                \"allow_symbol_change\": true,\n                \"calendar\": false,\n                \"details\": false,\n                \"hide_side_toolbar\": true,\n                \"hide_top_toolbar\": false,\n                \"hide_legend\": false,\n                \"hide_volume\": false,\n                \"hotlist\": false,\n                \"interval\": \"15\",\n                \"locale\": \"en\",\n                \"save_image\": true,\n                \"style\": \"1\",\n                \"symbol\": ")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var8, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(tvSymbol)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 50, Col: 37}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, ",\n                \"theme\": \"dark\",\n                \"timezone\": \"Asia/Kolkata\",\n                \"backgroundColor\": \"#111113\",\n                \"gridColor\": \"rgba(255, 255, 255, 0.04)\",\n                \"watchlist\": [],\n                \"withdateranges\": false,\n                \"compareSymbols\": [],\n                \"studies\": [],\n                \"width\": \"100%\",\n                \"height\": \"100%\"\n            }\n            </script></div><!-- Market Data Column: Orderbook + Recent Trades --><div class=\"market-data\"><!-- Orderbook Panel --><div class=\"orderbook\"><div class=\"orderbook-header\"><h3>Order Book</h3></div><div class=\"orderbook-cols\"><span>Price (USDT)</span> <span>Size</span> <span>Total</span></div><div class=\"orderbook-asks\"><!-- Sell orders (asks) - populated by websocket --><div class=\"orderbook-row ask\"><span class=\"price\">--</span> <span class=\"size\">--</span> <span class=\"total\">--</span></div></div><div class=\"orderbook-spread\"><span>Spread</span> <span class=\"spread-value\">--</span></div><div class=\"orderbook-bids\"><!-- Buy orders (bids) - populated by websocket --><div class=\"orderbook-row bid\"><span class=\"price\">--</span> <span class=\"size\">--</span> <span class=\"total\">--</span></div></div></div><!-- Recent Trades Panel --><div class=\"recent-trades\"><div class=\"recent-trades-header\"><h3>Recent Trades</h3></div><div class=\"trades-cols\"><span>Price</span> <span>Size</span> <span>Time</span></div><div class=\"trades-list\"><!-- Trade history - populated by websocket --><div class=\"trade-row\"><span class=\"price\">--</span> <span class=\"size\">--</span> <span class=\"time\">--</span></div></div></div></div><!-- Trade Panel (Order Form) --><div class=\"trade-panel\" id=\"trade-panel\"><div class=\"trade-panel-header\"><div class=\"order-type-toggle\"><button class=\"toggle-btn active\" data-side=\"buy\" type=\"button\">Buy</button> <button class=\"toggle-btn\" data-side=\"sell\" type=\"button\">Sell</button></div></div><div class=\"trade-panel-body\"><!-- Order Type Selection --><div class=\"order-type-selector\"><label class=\"radio-option\"><input type=\"radio\" name=\"orderType\" value=\"limit\" checked> <span>Limit</span></label> <label class=\"radio-option\"><input type=\"radio\" name=\"orderType\" value=\"market\"> <span>Market</span></label></div><!-- Available Margin Display --><div class=\"margin-info\"><span class=\"label\">Available Balance</span> <span class=\"value mono\" id=\"available-margin\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, ",\n                \"theme\": \"dark\",\n                \"timezone\": \"Asia/Kolkata\",\n                \"backgroundColor\": \"#111113\",\n                \"gridColor\": \"rgba(255, 255, 255, 0.04)\",\n                \"watchlist\": [],\n                \"withdateranges\": false,\n                \"compareSymbols\": [],\n                \"studies\": [],\n                \"width\": \"100%\",\n                \"height\": \"100%\"\n            }\n            </script></div><!-- Market Data Column: Orderbook + Recent Trades --><div class=\"market-data\"><!-- Orderbook Panel --><div class=\"orderbook\"><div class=\"orderbook-header\"><h3>Order Book</h3></div><div class=\"orderbook-cols\"><span>Price (USDT)</span> <span>Size</span> <span>Total</span></div><div class=\"orderbook-asks\"><!-- Sell orders (asks) - populated by websocket --><div class=\"orderbook-row ask\"><span class=\"price\">--</span> <span class=\"size\">--</span> <span class=\"total\">--</span></div></div><div class=\"orderbook-spread\"><span>Spread</span> <span class=\"spread-value\">--</span></div><div class=\"orderbook-bids\"><!-- Buy orders (bids) - populated by websocket --><div class=\"orderbook-row bid\"><span class=\"price\">--</span> <span class=\"size\">--</span> <span class=\"total\">--</span></div></div></div><!-- Recent Trades Panel --><div class=\"recent-trades\"><div class=\"recent-trades-header\"><h3>Recent Trades</h3></div><div class=\"trades-cols\"><span>Price</span> <span>Size</span> <span>Time</span></div><div class=\"trades-list\"><!-- Trade history - populated by websocket --><div class=\"trade-row\"><span class=\"price\">--</span> <span class=\"size\">--</span> <span class=\"time\">--</span></div></div></div></div><!-- Trade Panel (Order Form) --><div class=\"trade-panel\" id=\"trade-panel\"><div class=\"trade-panel-header\"><div class=\"order-type-toggle\"><button class=\"toggle-btn active\" data-side=\"buy\" type=\"button\">Buy</button> <button class=\"toggle-btn\" data-side=\"sell\" type=\"button\">Sell</button></div></div><div class=\"trade-panel-body\"><!-- Order Type Selection --><div class=\"order-type-selector\"><label class=\"radio-option\"><input type=\"radio\" name=\"orderType\" value=\"limit\" checked> <span>Limit</span></label> <label class=\"radio-option\"><input type=\"radio\" name=\"orderType\" value=\"market\"> <span>Market</span></label></div><!-- Available Margin Display --><div class=\"margin-info\"><span class=\"label\">Available Balance</span> <span class=\"value mono\" id=\"available-margin\">")
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(walletBalance))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 141, Col: 102}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, " USDT</span></div><!-- Price Input (only for limit orders) --><div class=\"input-group limit-only\"><label for=\"price\">Price</label><div class=\"input-wrapper\"><input type=\"number\" id=\"price\" placeholder=\"0.00\" step=\"0.01\"> <span class=\"input-suffix\">USDT</span></div></div><!-- Amount Input --><div class=\"input-group\"><label for=\"amount\">Amount</label><div class=\"input-wrapper\"><input type=\"number\" id=\"amount\" placeholder=\"0.00\" step=\"0.00000001\"> <span class=\"input-suffix\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(walletBalance))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Name))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 145, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 158, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, " USDT</span></div><!-- Price Input (only for limit orders) --><div class=\"input-group limit-only\"><label for=\"price\">Price</label><div class=\"input-wrapper\"><input type=\"number\" id=\"price\" placeholder=\"0.00\" step=\"0.01\"> <span class=\"input-suffix\">USDT</span></div></div><!-- Amount Input --><div class=\"input-group\"><label for=\"amount\">Amount</label><div class=\"input-wrapper\"><input type=\"number\" id=\"amount\" placeholder=\"0.00\" step=\"0.00000001\"> <span class=\"input-suffix\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Name))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 162, Col: 81}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></div></div><!-- Percentage Buttons --><div class=\"percentage-buttons\"><button class=\"percent-btn\" data-percent=\"25\" type=\"button\">25%</button> <button class=\"percent-btn\" data-percent=\"50\" type=\"button\">50%</button> <button class=\"percent-btn\" data-percent=\"75\" type=\"button\">75%</button> <button class=\"percent-btn\" data-percent=\"100\" type=\"button\">100%</button></div><!-- Total Display --><div class=\"total-info\"><span class=\"label\">Total</span> <span class=\"value mono\" id=\"total-amount\">0.00 USDT</span></div><!-- Action Button -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></div></div><!-- Percentage Buttons --><div class=\"percentage-buttons\"><button class=\"percent-btn\" data-percent=\"25\" type=\"button\">25%</button> <button class=\"percent-btn\" data-percent=\"50\" type=\"button\">50%</button> <button class=\"percent-btn\" data-percent=\"75\" type=\"button\">75%</button> <button class=\"percent-btn\" data-percent=\"100\" type=\"button\">100%</button></div><!-- Total Display --><div class=\"total-info\"><span class=\"label\">Total</span> <span class=\"value mono\" id=\"total-amount\">0.00 USDT</span></div><!-- Action Button -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if walletBalance == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<a href=\"/user/wallet\" class=\"action-btn add-funds-btn\">Add Funds to Trade</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<a href=\"/user/wallet\" class=\"action-btn add-funds-btn\">Add Funds to Trade</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<button class=\"action-btn buy-btn\" id=\"place-order-btn\" type=\"button\">Buy ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<button class=\"action-btn buy-btn\" id=\"place-order-btn\" type=\"button\">Buy ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Name))
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 187, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 183, Col: 58}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</button>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</button>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><!-- Trade History Link --><a href=\"/orders\" class=\"trade-history-link\">View Trade History</a></div></div><script>\n        // Trade Panel Interactivity\n        (function() {\n            document.addEventListener('DOMContentLoaded', function() {\n                // Data from Go template\n                const availableMargin = ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><!-- Trade History Link --><a href=\"/orders\" class=\"trade-history-link\">View Trade History</a></div></div><script>\n        // Trade Panel Interactivity\n        (function() {\n            document.addEventListener('DOMContentLoaded', function() {\n                // Data from Go template\n                const availableMargin = ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var12, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(fmt.Sprintf("%.2f", float64(walletBalance)/100))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(fmt.Sprintf("%.2f", float64(walletBalance)/100))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 204, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 200, Col: 90}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, ";\n                const currentPrice = ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var12, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(fmt.Sprintf("%.2f", symbol.Price))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 201, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, ";\n                const currentPrice = ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, ";\n                const symbolName = '")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var13, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(fmt.Sprintf("%.2f", symbol.Price))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(strings.ToUpper(symbol.Name))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 205, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 202, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, ";\n                const symbolName = '")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var14, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(strings.ToUpper(symbol.Name))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/trade.templ`, Line: 206, Col: 67}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "';\n\n                const tradePanel = document.getElementById('trade-panel');\n                const buyBtn = document.querySelector('[data-side=\"buy\"]');\n                const sellBtn = document.querySelector('[data-side=\"sell\"]');\n                const placeOrderBtn = document.getElementById('place-order-btn');\n                const orderTypeRadios = document.querySelectorAll('input[name=\"orderType\"]');\n                const priceInput = document.getElementById('price');\n                const amountInput = document.getElementById('amount');\n                const limitOnlyGroup = document.querySelector('.limit-only');\n                const percentButtons = document.querySelectorAll('.percent-btn');\n                const totalDisplay = document.getElementById('total-amount');\n                \n                let currentSide = 'buy';\n                let currentOrderType = 'limit';\n\n                // Buy/Sell Toggle with smooth color transition\n                if (buyBtn) {\n                    buyBtn.addEventListener('click', function() {\n                        currentSide = 'buy';\n                        buyBtn.classList.add('active');\n                        sellBtn.classList.remove('active');\n                        tradePanel.classList.remove('sell-mode');\n                        tradePanel.classList.add('buy-mode');\n                        if (placeOrderBtn) {\n                            placeOrderBtn.className = 'action-btn buy-btn';\n                            placeOrderBtn.textContent = 'Buy ' + symbolName;\n                        }\n                    });\n                }\n\n                if (sellBtn) {\n                    sellBtn.addEventListener('click', function() {\n                        currentSide = 'sell';\n                        sellBtn.classList.add('active');\n                        buyBtn.classList.remove('active');\n                        tradePanel.classList.remove('buy-mode');\n                        tradePanel.classList.add('sell-mode');\n                        if (placeOrderBtn) {\n                            placeOrderBtn.className = 'action-btn sell-btn';\n                            placeOrderBtn.textContent = 'Sell ' + symbolName;\n                        }\n                    });\n                }\n\n                // Order Type Toggle (Limit/Market)\n                orderTypeRadios.forEach(function(radio) {\n                    radio.addEventListener('change', function() {\n                        currentOrderType = this.value;\n                        if (currentOrderType === 'market') {\n                            limitOnlyGroup.style.display = 'none';\n                        } else {\n                            limitOnlyGroup.style.display = 'flex';\n                        }\n                        calculateTotal();\n                    });\n                });\n\n                // Percentage Buttons\n                percentButtons.forEach(function(btn) {\n                    btn.addEventListener('click', function() {\n                        // Remove active state from all\n                        percentButtons.forEach(function(b) { b.classList.remove('active'); });\n                        this.classList.add('active');\n                        \n                        const percent = parseFloat(this.dataset.percent);\n                        const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || currentPrice) : currentPrice;\n                        if (price > 0) {\n                            const amount = (availableMargin * percent / 100) / price;\n                            amountInput.value = amount.toFixed(8);\n                            calculateTotal();\n                        }\n                    });\n                });\n\n                // Calculate Total\n                function calculateTotal() {\n                    const amount = parseFloat(amountInput.value) || 0;\n                    const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || 0) : currentPrice;\n                    const total = amount * price;\n                    if (totalDisplay) {\n                        totalDisplay.textContent = total.toFixed(2) + ' USDT';\n                    }\n                }\n\n                // Update total on input change\n                if (priceInput) {\n                    priceInput.addEventListener('input', function() {\n                        percentButtons.forEach(function(b) { b.classList.remove('active'); });\n                        calculateTotal();\n                    });\n                }\n                if (amountInput) {\n                    amountInput.addEventListener('input', function() {\n                        percentButtons.forEach(function(b) { b.classList.remove('active'); });\n                        calculateTotal();\n                    });\n                }\n\n                // Set initial price for limit orders\n                if (priceInput && currentPrice > 0) {\n                    priceInput.value = currentPrice.toFixed(2);\n                }\n\n                // Initialize buy mode\n                if (tradePanel) {\n                    tradePanel.classList.add('buy-mode');\n                }\n            });\n        })();\n    </script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "';\n\n                const tradePanel = document.getElementById('trade-panel');\n                const buyBtn = document.querySelector('[data-side=\"buy\"]');\n                const sellBtn = document.querySelector('[data-side=\"sell\"]');\n                const placeOrderBtn = document.getElementById('place-order-btn');\n                const orderTypeRadios = document.querySelectorAll('input[name=\"orderType\"]');\n                const priceInput = document.getElementById('price');\n                const amountInput = document.getElementById('amount');\n                const limitOnlyGroup = document.querySelector('.limit-only');\n                const percentButtons = document.querySelectorAll('.percent-btn');\n                const totalDisplay = document.getElementById('total-amount');\n                \n                let currentSide = 'buy';\n                let currentOrderType = 'limit';\n\n                // Buy/Sell Toggle with smooth color transition\n                if (buyBtn) {\n                    buyBtn.addEventListener('click', function() {\n                        currentSide = 'buy';\n                        buyBtn.classList.add('active');\n                        sellBtn.classList.remove('active');\n                        tradePanel.classList.remove('sell-mode');\n                        tradePanel.classList.add('buy-mode');\n                        if (placeOrderBtn) {\n                            placeOrderBtn.className = 'action-btn buy-btn';\n                            placeOrderBtn.textContent = 'Buy ' + symbolName;\n                        }\n                    });\n                }\n\n                if (sellBtn) {\n                    sellBtn.addEventListener('click', function() {\n                        currentSide = 'sell';\n                        sellBtn.classList.add('active');\n                        buyBtn.classList.remove('active');\n                        tradePanel.classList.remove('buy-mode');\n                        tradePanel.classList.add('sell-mode');\n                        if (placeOrderBtn) {\n                            placeOrderBtn.className = 'action-btn sell-btn';\n                            placeOrderBtn.textContent = 'Sell ' + symbolName;\n                        }\n                    });\n                }\n\n                // Order Type Toggle (Limit/Market)\n                orderTypeRadios.forEach(function(radio) {\n                    radio.addEventListener('change', function() {\n                        currentOrderType = this.value;\n                        if (currentOrderType === 'market') {\n                            limitOnlyGroup.style.display = 'none';\n                        } else {\n                            limitOnlyGroup.style.display = 'flex';\n                        }\n                        calculateTotal();\n                    });\n                });\n\n                // Percentage Buttons\n                percentButtons.forEach(function(btn) {\n                    btn.addEventListener('click', function() {\n                        // Remove active state from all\n                        percentButtons.forEach(function(b) { b.classList.remove('active'); });\n                        this.classList.add('active');\n                        \n                        const percent = parseFloat(this.dataset.percent);\n                        const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || currentPrice) : currentPrice;\n                        if (price > 0) {\n                            const amount = (availableMargin * percent / 100) / price;\n                            amountInput.value = amount.toFixed(8);\n                            calculateTotal();\n                        }\n                    });\n                });\n\n                // Calculate Total\n                function calculateTotal() {\n                    const amount = parseFloat(amountInput.value) || 0;\n                    const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || 0) : currentPrice;\n                    const total = amount * price;\n                    if (totalDisplay) {\n                        totalDisplay.textContent = total.toFixed(2) + ' USDT';\n                    }\n                }\n\n                // Update total on input change\n                if (priceInput) {\n                    priceInput.addEventListener('input', function() {\n                        percentButtons.forEach(function(b) { b.classList.remove('active'); });\n                        calculateTotal();\n                    });\n                }\n                if (amountInput) {\n                    amountInput.addEventListener('input', function() {\n                        percentButtons.forEach(function(b) { b.classList.remove('active'); });\n                        calculateTotal();\n                    });\n                }\n\n                // Set initial price for limit orders\n                if (priceInput && currentPrice > 0) {\n                    priceInput.value = currentPrice.toFixed(2);\n                }\n\n                // Initialize buy mode\n                if (tradePanel) {\n                    tradePanel.classList.add('buy-mode');\n                }\n            });\n        })();\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

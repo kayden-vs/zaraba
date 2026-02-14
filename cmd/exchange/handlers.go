@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/kayden-vs/zaraba/internal/engine"
 	"github.com/kayden-vs/zaraba/internal/models"
+	"github.com/kayden-vs/zaraba/internal/service"
 	"github.com/kayden-vs/zaraba/internal/validator"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
 )
@@ -26,7 +28,8 @@ func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
 	symbolListProps, err := app.fetchCoinMarket()
 	if err != nil {
 		fmt.Println(err)
-		return
+		// Still render page with empty data, WebSocket will populate
+		symbolListProps = nil
 	}
 
 	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
@@ -202,6 +205,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	app.sessionManager.Put(r.Context(), "flash", "Logged in succesfully!")
 
 	http.Redirect(w, r, "/markets", http.StatusSeeOther)
 }
@@ -258,4 +262,27 @@ func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request
 	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d added successfully!", amountUser))
 
 	http.Redirect(w, r, "/user/wallet", http.StatusSeeOther)
+}
+
+func (app *application) WsHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := service.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	service.CenterHub.Mu.Lock()
+	service.CenterHub.Clients[conn] = true
+	service.CenterHub.Mu.Unlock()
+
+	// Keep connection alive
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			service.CenterHub.Mu.Lock()
+			delete(service.CenterHub.Clients, conn)
+			service.CenterHub.Mu.Unlock()
+			conn.Close()
+			break
+		}
+	}
 }

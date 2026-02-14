@@ -33,6 +33,8 @@ func (app *application) routes() http.Handler {
 
 		r.Get("/", app.HomeHandler)
 		r.Get("/markets", app.MarketsHandler)
+		r.Get("/ws", app.WsHandler)
+
 		r.Get("/trade/{symbol}", app.TradeHandler)
 
 		r.Get("/user/signup", app.userSignup)

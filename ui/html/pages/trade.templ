@@ -24,10 +24,6 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
             } else {
                 <span class="price-change negative">{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
             }
-            <div class="stat-item">
-                <span class="stat-label">24h Volume</span>
-                <span class="stat-value">{ FormatNumberShort(symbol.Volume) }</span>
-            </div>
         </div>
 
         <!-- TradingView Chart -->

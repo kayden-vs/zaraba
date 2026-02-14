@@ -12,6 +12,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form"
 	"github.com/kayden-vs/zaraba/internal/models"
+	"github.com/kayden-vs/zaraba/internal/service"
 	_ "github.com/lib/pq"
 )
 
@@ -26,7 +27,7 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP server port")
-	dsn := flag.String("dsn", "postgres://rohit:eren@localhost/exchange?sslmode=disable", "PostgreSQL data source name")
+	dsn := flag.String("dsn", "postgres://rohit:eren@/exchange?host=/var/run/postgresql&sslmode=disable", "PostgreSQL data source name")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -43,6 +44,9 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = postgresstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+
+	// Start WebSocket price fetcher
+	go service.StartPriceFetcher()
 
 	app := &application{
 		errorLog:       errorLog,
