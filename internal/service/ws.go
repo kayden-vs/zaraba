@@ -28,6 +28,17 @@ var Upgrader = websocket.Upgrader{
 
 func StartPriceFetcher() {
 	for {
+		// Only fetch if there are active clients
+		CenterHub.Mu.Lock()
+		clientCount := len(CenterHub.Clients)
+		CenterHub.Mu.Unlock()
+
+		if clientCount == 0 {
+			log.Println("No active WebSocket clients, skipping fetch")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
 		url := "https://api.coingecko.com/api/v3/coins/markets" +
 			"?vs_currency=usd" +
 			"&order=market_cap_desc" +

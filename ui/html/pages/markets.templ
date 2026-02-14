@@ -130,25 +130,71 @@ templ MarketsBody(symbols []CoinMarketProps) {
                 });
             });
 
-            // WebSocket - NECESSARY: Receive real-time updates from backend
+            // WebSocket - Track previous prices for flash effect
+            const previousPrices = new Map();
+            
+            // Initialize previous prices from current page data
+            rows.forEach(row => {
+                const priceCell = row.querySelector('.price-cell');
+                if (priceCell) {
+                    const priceText = priceCell.textContent.replace('$', '');
+                    const price = parseFloat(priceText);
+                    previousPrices.set(row.dataset.symbol, price);
+                }
+            });
+
             const ws = new WebSocket('ws://' + window.location.host + '/ws');
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+            };
 
             ws.onmessage = function(event) {
-                const symbols = JSON.parse(event.data); // Backend sends JSON array
+                const symbols = JSON.parse(event.data);
+                console.log('Received', symbols.length, 'symbols');
                 
-                // NECESSARY: Loop through markets and update each row
                 symbols.forEach(symbol => {
-                    const row = document.querySelector(`tr[data-symbol="${symbol.id}"]`);
-                    if (!row) return;
+                    const symbolId = symbol.id.toLowerCase();
+                    const row = document.querySelector(`tr[data-symbol="${symbolId}"]`);
+                    if (!row) {
+                        console.log('Row not found for:', symbolId);
+                        return;
+                    }
                     
-                    // Update the 3 values for this market
-                    row.querySelector('.price-cell').textContent = '$' + symbol.current_price.toFixed(2);
+                    const priceCell = row.querySelector('.price-cell');
+                    const newPrice = symbol.current_price;
+                    const oldPrice = previousPrices.get(symbolId);
                     
+                    console.log(symbolId, 'old:', oldPrice, 'new:', newPrice);
+                    
+                    // Update price with flash effect
+                    if (oldPrice !== undefined && oldPrice !== newPrice) {
+                        // Remove any existing flash classes
+                        priceCell.classList.remove('price-flash-up', 'price-flash-down');
+                        
+                        // Trigger reflow to restart animation
+                        void priceCell.offsetWidth;
+                        
+                        // Add appropriate flash class
+                        if (newPrice > oldPrice) {
+                            priceCell.classList.add('price-flash-up');
+                            console.log(symbolId, 'FLASH GREEN');
+                        } else if (newPrice < oldPrice) {
+                            priceCell.classList.add('price-flash-down');
+                            console.log(symbolId, 'FLASH RED');
+                        }
+                    }
+                    
+                    priceCell.textContent = '$' + newPrice.toFixed(2);
+                    previousPrices.set(symbolId, newPrice);
+                    
+                    // Update 24h change
                     const change = symbol.price_change_percentage_24h;
                     const changeCell = row.querySelector('.change-cell');
                     changeCell.className = 'change-cell mono ' + (change >= 0 ? 'positive' : 'negative');
                     changeCell.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
                     
+                    // Update volume
                     const volume = symbol.total_volume;
                     row.querySelector('.volume-cell').textContent = 
                         volume >= 1e9 ? (volume/1e9).toFixed(2) + 'B' :
@@ -157,7 +203,7 @@ templ MarketsBody(symbols []CoinMarketProps) {
                 });
             };
 
-            // OPTIONAL: Reconnect if connection drops (good for production)
+            // Reconnect if connection drops
             ws.onclose = () => setTimeout(() => location.reload(), 3000);
         });
     </script>

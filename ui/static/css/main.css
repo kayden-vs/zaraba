@@ -1413,6 +1413,42 @@ tbody tr.clickable {
 .price-cell {
   font-family: var(--font-mono);
   font-weight: var(--font-medium);
+  transition: all 0.3s ease;
+}
+
+/* Price flash animations */
+.price-flash-up {
+  animation: flashGreen 0.6s ease-out;
+}
+
+.price-flash-down {
+  animation: flashRed 0.6s ease-out;
+}
+
+@keyframes flashGreen {
+  0% {
+    background-color: var(--color-buy-muted);
+    color: var(--color-buy);
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: transparent;
+    color: var(--text-primary);
+    transform: scale(1);
+  }
+}
+
+@keyframes flashRed {
+  0% {
+    background-color: var(--color-sell-muted);
+    color: var(--color-sell);
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: transparent;
+    color: var(--text-primary);
+    transform: scale(1);
+  }
 }
 
 .change-cell {
