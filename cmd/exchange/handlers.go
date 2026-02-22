@@ -20,47 +20,6 @@ func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func (app *application) PlaceOrderPost(w http.ResponseWriter, r *http.Request) {}
-
-func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {}
-
-func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
-	symbolListProps, err := app.fetchCoinMarket()
-	if err != nil {
-		fmt.Println(err)
-		// Still render page with empty data, WebSocket will populate
-		symbolListProps = nil
-	}
-
-	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.MarketsPage(symbolListProps, flash, isAuthenticated, csrfToken)
-	})
-}
-
-func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
-	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-
-	symbolID := chi.URLParam(r, "symbol")
-
-	// chart
-	var symbolData pages.CoinMarketProps
-	symbolData, err := app.FetchSymbolData(symbolID)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	tvSymbol := GetTvSymbol(symbolData.Symbol)
-
-	balance, err := app.wallet.GetBalance(int64(userID))
-
-	// trading panel
-
-	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
-		return pages.TradePage(symbolData, tvSymbol, balance, flash, isAuthenticated, csrfToken)
-	})
-}
-
 type userSignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
@@ -220,6 +179,49 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out Succesfully!")
 	http.Redirect(w, r, "/markets", http.StatusSeeOther)
+}
+
+// ----- AUTH END -------
+
+func (app *application) PlaceOrderPost(w http.ResponseWriter, r *http.Request) {}
+
+func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {}
+
+func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
+	symbolListProps, err := app.fetchCoinMarket()
+	if err != nil {
+		fmt.Println(err)
+		// Still render page with empty data, WebSocket will populate
+		symbolListProps = nil
+	}
+
+	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
+		return pages.MarketsPage(symbolListProps, flash, isAuthenticated, csrfToken)
+	})
+}
+
+func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	symbolID := chi.URLParam(r, "symbol")
+
+	// chart
+	var symbolData pages.CoinMarketProps
+	symbolData, err := app.FetchSymbolData(symbolID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	tvSymbol := GetTvSymbol(symbolData.Symbol)
+
+	balance, err := app.wallet.GetBalance(int64(userID))
+
+	// trading panel
+
+	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
+		return pages.TradePage(symbolData, tvSymbol, balance, flash, isAuthenticated, csrfToken)
+	})
 }
 
 func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {

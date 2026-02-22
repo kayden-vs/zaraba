@@ -7,6 +7,7 @@ option go_package = "github.com/kayden-vs/zaraba/pb";
 service Exchange {
     rpc PlaceMarketOrder(Order) returns (Match);
     rpc PlaceLimitOrder(PlaceLimitOrderRequest) returns (Match);
+    rpc StreamOrderBook(OrderBookRequest) returns (OrderbookSnapshot)
 }
 
 message Order {
@@ -19,19 +20,29 @@ message Order {
 }
 
 message Limit {
-    int64 price = 1; // Price in micro-USDT (1 USDT = 1,000,000 units)
+    int64 price = 1; 
     repeated Order orders = 2;
-    int64 total_volume = 3; // Total volume in base asset integer units
+    int64 total_volume = 3; 
 }
 
 message PlaceLimitOrderRequest {
-    int64 price = 1; // Price in micro-USDT (1 USDT = 1,000,000 units)
+    int64 price = 1; 
     Order order = 2;
 }
 
 message Match {
     Order ask = 1;
     Order bid = 2;
-    int64 sizeFilled = 3; // Filled quantity in base asset integer units
-    int64 price = 4; // Price in micro-USDT (1 USDT = 1,000,000 units)
+    int64 sizeFilled = 3; 
+    int64 price = 4; 
+}
+
+message OrderBookRequest {
+    string market = 1;
+}
+
+message OrderbookSnapshot {
+    repeated Limit asks = 1; 
+    repeated Limit bids = 2;
+    int64 timestamp = 3;
 }
