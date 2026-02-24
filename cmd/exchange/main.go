@@ -48,9 +48,6 @@ func main() {
 	sessionManager.Store = postgresstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
 
-	// Start WebSocket price fetcher
-	go service.StartMarketFetcher()
-
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
@@ -85,6 +82,11 @@ func main() {
 			errorLog.Fatalf("failed to serve gRPC: %v", err)
 		}
 	}()
+
+	// start sse for orderbook
+	go service.StartOrderBookFetcher(exchangeServer)
+	// Start WebSocket price fetcher
+	go service.StartMarketFetcher()
 
 	infoLog.Printf("Starting HTTP server on %s", *addr)
 	err = srv.ListenAndServe()

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kayden-vs/zaraba/pb"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
 )
 
@@ -21,6 +23,10 @@ type Broker struct {
 }
 
 var PriceBroker = &Broker{
+	clients: make(map[chan []byte]bool),
+}
+
+var OrderbookBroker = &Broker{
 	clients: make(map[chan []byte]bool),
 }
 
@@ -100,5 +106,32 @@ func StartMarketFetcher() {
 		PriceBroker.Broadcast(jsonData) // sends to all clients
 
 		time.Sleep(5 * time.Second)
+	}
+}
+
+func StartOrderBookFetcher(server *ExchangeServer) {
+	for {
+		if OrderbookBroker.ClientCount() == 0 {
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		snapshot, err := server.StreamOrderBook(context.Background(), &pb.
+			OrderBookRequest{Market: "btc"})
+		if err != nil {
+			log.Println("Error fetching orderbook:", err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		jsonData, err := json.Marshal(snapshot)
+		if err != nil {
+			log.Println("Error marshaling snapshot data:", err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		OrderbookBroker.Broadcast(jsonData)
+		time.Sleep(2 * time.Second)
 	}
 }
