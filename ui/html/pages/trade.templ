@@ -70,9 +70,9 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                     <span>Size</span>
                     <span>Total</span>
                 </div>
-                <div class="orderbook-asks">
-                    <!-- Sell orders (asks) - populated by websocket -->
-                    <div class="orderbook-row ask">
+                <div class="orderbook-asks" id="orderbook-asks">
+                    <!-- Sell orders (asks) - populated by SSE -->
+                    <div class="orderbook-row ask placeholder-row">
                         <span class="price">--</span>
                         <span class="size">--</span>
                         <span class="total">--</span>
@@ -80,11 +80,11 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 </div>
                 <div class="orderbook-spread">
                     <span>Spread</span>
-                    <span class="spread-value">--</span>
+                    <span class="spread-value" id="orderbook-spread">--</span>
                 </div>
-                <div class="orderbook-bids">
-                    <!-- Buy orders (bids) - populated by websocket -->
-                    <div class="orderbook-row bid">
+                <div class="orderbook-bids" id="orderbook-bids">
+                    <!-- Buy orders (bids) - populated by SSE -->
+                    <div class="orderbook-row bid placeholder-row">
                         <span class="price">--</span>
                         <span class="size">--</span>
                         <span class="total">--</span>
@@ -103,7 +103,6 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                     <span>Time</span>
                 </div>
                 <div class="trades-list">
-                    <!-- Trade history - populated by websocket -->
                     <div class="trade-row">
                         <span class="price">--</span>
                         <span class="size">--</span>
@@ -192,6 +191,111 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
         </div>
     </div>
 
+    <!-- ==================== -->
+    <!-- SSE: Order Book      -->
+    <!-- ==================== -->
+    <script>
+        (function() {
+            // Precision constants matching Go engine
+            const PRICE_SCALE = 1_000_000;       // 1 USDT = 1,000,000 micro-USDT
+            const QUANTITY_SCALE = 100_000_000;   // 1 unit = 100,000,000 base units
+
+            function formatPrice(microUsdt) {
+                return (microUsdt / PRICE_SCALE).toFixed(2);
+            }
+
+            function formatQuantity(baseUnits) {
+                return (baseUnits / QUANTITY_SCALE).toFixed(4);
+            }
+
+            function formatTotal(price, totalVolume) {
+                const usdt = (price / PRICE_SCALE) * (totalVolume / QUANTITY_SCALE);
+                return usdt.toFixed(2);
+            }
+
+            // Build a single orderbook row
+            function createRow(limit, side) {
+                const row = document.createElement('div');
+                row.className = 'orderbook-row ' + side;
+
+                const priceSpan = document.createElement('span');
+                priceSpan.className = 'price';
+                priceSpan.textContent = formatPrice(limit.price);
+
+                const sizeSpan = document.createElement('span');
+                sizeSpan.className = 'size';
+                sizeSpan.textContent = formatQuantity(limit.total_volume);
+
+                const totalSpan = document.createElement('span');
+                totalSpan.className = 'total';
+                totalSpan.textContent = formatTotal(limit.price, limit.total_volume);
+
+                row.appendChild(priceSpan);
+                row.appendChild(sizeSpan);
+                row.appendChild(totalSpan);
+                return row;
+            }
+
+            // Render the full orderbook from snapshot
+            function renderOrderbook(snapshot) {
+                const asksContainer = document.getElementById('orderbook-asks');
+                const bidsContainer = document.getElementById('orderbook-bids');
+                const spreadEl = document.getElementById('orderbook-spread');
+
+                // Clear existing rows
+                asksContainer.innerHTML = '';
+                bidsContainer.innerHTML = '';
+
+                const asks = snapshot.asks || [];
+                const bids = snapshot.bids || [];
+
+                // Asks: lowest price at bottom (closest to spread)
+                // Reverse so lowest is last (visually closest to spread)
+                for (let i = asks.length - 1; i >= 0; i--) {
+                    asksContainer.appendChild(createRow(asks[i], 'ask'));
+                }
+
+                // Bids: highest price at top (closest to spread)
+                for (let i = 0; i < bids.length; i++) {
+                    bidsContainer.appendChild(createRow(bids[i], 'bid'));
+                }
+
+                // Calculate spread
+                if (asks.length > 0 && bids.length > 0) {
+                    const lowestAsk = asks[0].price;
+                    const highestBid = bids[0].price;
+                    const spread = (lowestAsk - highestBid) / PRICE_SCALE;
+                    spreadEl.textContent = spread.toFixed(2) + ' USDT';
+                } else {
+                    spreadEl.textContent = '--';
+                }
+
+                // Show placeholder if empty
+                if (asks.length === 0) {
+                    asksContainer.innerHTML = '<div class="orderbook-row ask placeholder-row"><span class="price">--</span><span class="size">--</span><span class="total">--</span></div>';
+                }
+                if (bids.length === 0) {
+                    bidsContainer.innerHTML = '<div class="orderbook-row bid placeholder-row"><span class="price">--</span><span class="size">--</span><span class="total">--</span></div>';
+                }
+            }
+
+            // Connect to SSE
+            const es = new EventSource('/sse/orderbook');
+
+            es.onmessage = function(event) {
+                const snapshot = JSON.parse(event.data);
+                renderOrderbook(snapshot);
+            };
+
+            es.onerror = function() {
+                console.log('Orderbook SSE connection lost, auto-reconnecting...');
+            };
+        })();
+    </script>
+
+    <!-- ==================== -->
+    <!-- Trade Panel Logic     -->
+    <!-- ==================== -->
     <script>
         // Trade Panel Interactivity
         (function() {

@@ -321,6 +321,11 @@ func (app *application) SseMarketHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Establish the connection immediately so the browser doesn't time out
+	// waiting for the first event
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
 	// register this client with the broker
 	clientChan := service.PriceBroker.AddClient()
 	defer service.PriceBroker.RemoveClient(clientChan)
@@ -351,8 +356,16 @@ func (app *application) SseOrderBookHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Establish the connection immediately
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	// Register client first, then broadcast so this client receives it
 	clientChan := service.OrderbookBroker.AddClient()
 	defer service.OrderbookBroker.RemoveClient(clientChan)
+
+	// Send current orderbook state immediately on connect
+	service.BroadcastOrderBook(app.exchangeServer)
 
 	for {
 		select {

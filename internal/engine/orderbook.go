@@ -14,6 +14,7 @@ type Limit struct {
 
 type Order struct {
 	*pb.Order
+	engineLimit *Limit // back-reference to parent Limit; kept separate from pb.Order.Limit to avoid circular proto references
 }
 
 type Match struct {
@@ -51,7 +52,7 @@ func (o *Order) IsFilled() bool {
 }
 
 func (l *Limit) AddOrder(o *Order) {
-	o.Limit = l.Limit
+	o.engineLimit = l
 	l.Orders = append(l.Orders, o.Order)
 	l.TotalVolume += o.Size
 }
@@ -67,7 +68,7 @@ func (l *Limit) DeleteOrder(o *Order) {
 		}
 	}
 
-	o.Limit = nil
+	o.engineLimit = nil
 	l.TotalVolume -= o.Size
 }
 
@@ -245,10 +246,13 @@ func (ob *Orderbook) clearLimit(bid bool, l *Limit) {
 
 func (ob *Orderbook) CancelOrder(o *Order) {
 	var limit *Limit
+	if o.engineLimit == nil {
+		return
+	}
 	if o.Bid {
-		limit = ob.BidLimits[o.Limit.Price]
+		limit = ob.BidLimits[o.engineLimit.Price]
 	} else {
-		limit = ob.AskLimits[o.Limit.Price]
+		limit = ob.AskLimits[o.engineLimit.Price]
 	}
 	if limit != nil {
 		limit.DeleteOrder(o)
@@ -279,11 +283,38 @@ func (ob *Orderbook) GetSnapshot() *pb.OrderbookSnapshot {
 	snapshot := &pb.OrderbookSnapshot{}
 
 	for _, limit := range ob.Asks {
-		snapshot.Asks = append(snapshot.Asks, limit.Limit)
+		cleanLimit := &pb.Limit{
+			Price:       limit.Price,
+			TotalVolume: limit.TotalVolume,
+		}
+		for _, order := range limit.Orders {
+			cleanLimit.Orders = append(cleanLimit.Orders, &pb.Order{
+				Id:        order.Id,
+				Price:     order.Price,
+				Size:      order.Size,
+				Bid:       order.Bid,
+				Timestamp: order.Timestamp,
+				// Limit intentionally nil to break the cycle
+			})
+		}
+		snapshot.Asks = append(snapshot.Asks, cleanLimit)
 	}
 
 	for _, limit := range ob.Bids {
-		snapshot.Bids = append(snapshot.Bids, limit.Limit)
+		cleanLimit := &pb.Limit{
+			Price:       limit.Price,
+			TotalVolume: limit.TotalVolume,
+		}
+		for _, order := range limit.Orders {
+			cleanLimit.Orders = append(cleanLimit.Orders, &pb.Order{
+				Id:        order.Id,
+				Price:     order.Price,
+				Size:      order.Size,
+				Bid:       order.Bid,
+				Timestamp: order.Timestamp,
+			})
+		}
+		snapshot.Bids = append(snapshot.Bids, cleanLimit)
 	}
 
 	return snapshot

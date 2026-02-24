@@ -26,6 +26,7 @@ type application struct {
 	users          models.UserModelInterface
 	wallet         models.WalletModelInterface
 	sessionManager *scs.SessionManager
+	exchangeServer *service.ExchangeServer
 }
 
 func main() {
@@ -74,6 +75,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	exchangeServer := service.NewExchangeServer()
+	app.exchangeServer = exchangeServer
 	pb.RegisterExchangeServer(grpcServer, exchangeServer)
 
 	go func() {

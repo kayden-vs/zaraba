@@ -39,8 +39,16 @@ func (s *ExchangeServer) PlaceMarketOrder(ctx context.Context, order *pb.Order) 
 	if len(matches) > 0 {
 		firstMatch := matches[0]
 		return &pb.Match{
-			Ask:        firstMatch.Ask.Order,
-			Bid:        firstMatch.Bid.Order,
+			Ask: &pb.Order{
+				Id: firstMatch.Ask.Id, Price: firstMatch.Ask.Price,
+				Size: firstMatch.Ask.Size, Bid: firstMatch.Ask.Bid,
+				Timestamp: firstMatch.Ask.Timestamp,
+			},
+			Bid: &pb.Order{
+				Id: firstMatch.Bid.Id, Price: firstMatch.Bid.Price,
+				Size: firstMatch.Bid.Size, Bid: firstMatch.Bid.Bid,
+				Timestamp: firstMatch.Bid.Timestamp,
+			},
 			SizeFilled: firstMatch.SizeFilled,
 			Price:      firstMatch.Price,
 		}, nil
@@ -65,7 +73,11 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 
 	// Since PlaceLimitOrder doesn't return matches, return an empty match
 	return &pb.Match{
-		Ask:   req.Order,
+		Ask: &pb.Order{
+			Id: req.Order.Id, Price: req.Order.Price,
+			Size: req.Order.Size, Bid: req.Order.Bid,
+			Timestamp: req.Order.Timestamp,
+		},
 		Price: req.Price,
 	}, nil
 }

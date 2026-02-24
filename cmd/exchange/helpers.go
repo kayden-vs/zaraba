@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -41,6 +42,10 @@ func (app *application) RenderPage(
 	csrfToken := nosurf.Token(r)
 	err := renderFunc(flash, isAuth, csrfToken).Render(r.Context(), w)
 	if err != nil {
+		// client navigated away mid-render — not a real error
+		if errors.Is(err, context.Canceled) {
+			return
+		}
 		app.errorLog.Println(err.Error())
 		app.serverError(w, err)
 		return
