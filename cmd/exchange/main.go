@@ -49,7 +49,7 @@ func main() {
 	sessionManager.Lifetime = 12 * time.Hour
 
 	// Start WebSocket price fetcher
-	go service.StartPriceFetcher()
+	go service.StartMarketFetcher()
 
 	app := &application{
 		errorLog:       errorLog,
@@ -61,12 +61,12 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:         *addr,
-		ErrorLog:     errorLog,
-		Handler:      app.routes(),
-		IdleTimeout:  1 * time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:        *addr,
+		ErrorLog:    errorLog,
+		Handler:     app.routes(),
+		IdleTimeout: 1 * time.Minute,
+		ReadTimeout: 5 * time.Second,
+		// WriteTimeout is intentionally omitted — SSE connections are long-lived
 	}
 
 	// Start gRPC server in a goroutine

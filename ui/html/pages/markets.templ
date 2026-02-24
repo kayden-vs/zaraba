@@ -143,45 +143,29 @@ templ MarketsBody(symbols []CoinMarketProps) {
                 }
             });
 
-            const ws = new WebSocket('ws://' + window.location.host + '/ws');
-            
-            ws.onopen = function() {
-                console.log('WebSocket connected');
-            };
+            const es = new EventSource('/sse/markets');
 
-            ws.onmessage = function(event) {
+            es.onmessage = function(event) {
                 const symbols = JSON.parse(event.data);
-                console.log('Received', symbols.length, 'symbols');
                 
                 symbols.forEach(symbol => {
                     const symbolId = symbol.id.toLowerCase();
                     const row = document.querySelector(`tr[data-symbol="${symbolId}"]`);
-                    if (!row) {
-                        console.log('Row not found for:', symbolId);
-                        return;
-                    }
+                    if (!row) return;
                     
                     const priceCell = row.querySelector('.price-cell');
                     const newPrice = symbol.current_price;
                     const oldPrice = previousPrices.get(symbolId);
                     
-                    console.log(symbolId, 'old:', oldPrice, 'new:', newPrice);
-                    
                     // Update price with flash effect
                     if (oldPrice !== undefined && oldPrice !== newPrice) {
-                        // Remove any existing flash classes
                         priceCell.classList.remove('price-flash-up', 'price-flash-down');
+                        void priceCell.offsetWidth; // trigger reflow to restart animation
                         
-                        // Trigger reflow to restart animation
-                        void priceCell.offsetWidth;
-                        
-                        // Add appropriate flash class
                         if (newPrice > oldPrice) {
                             priceCell.classList.add('price-flash-up');
-                            console.log(symbolId, 'FLASH GREEN');
                         } else if (newPrice < oldPrice) {
                             priceCell.classList.add('price-flash-down');
-                            console.log(symbolId, 'FLASH RED');
                         }
                     }
                     
@@ -203,8 +187,9 @@ templ MarketsBody(symbols []CoinMarketProps) {
                 });
             };
 
-            // Reconnect if connection drops
-            ws.onclose = () => setTimeout(() => location.reload(), 3000);
+            es.onerror = function() {
+                console.log('SSE connection lost, browser will auto-reconnect...');
+            };
         });
     </script>
 }

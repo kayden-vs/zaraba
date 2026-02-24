@@ -26,6 +26,9 @@ func (app *application) routes() http.Handler {
 
 	r.Get("/ping", ping)
 
+	r.Get("/sse/markets", app.SseMarketHandler)
+	r.Get("/sse/orderbook", app.SseOrderBookHandler)
+
 	r.Group(func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)
 		r.Use(noSurf)
@@ -33,8 +36,6 @@ func (app *application) routes() http.Handler {
 
 		r.Get("/", app.HomeHandler)
 		r.Get("/markets", app.MarketsHandler)
-		r.Get("/ws", app.WsHandler)
-		r.Get("/ws/orderbook", app.WsOrderBookHandler)
 
 		r.Get("/trade/{symbol}", app.TradeHandler)
 
