@@ -260,7 +260,6 @@ func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request
 
 	// TODO: add to portfolio summary
 
-	// render flash message
 	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d added successfully!", amountUser))
 
 	http.Redirect(w, r, "/user/wallet", http.StatusSeeOther)
@@ -283,6 +282,28 @@ func (app *application) WsHandler(w http.ResponseWriter, r *http.Request) {
 			service.CenterHub.Mu.Lock()
 			delete(service.CenterHub.Clients, conn)
 			service.CenterHub.Mu.Unlock()
+			conn.Close()
+			break
+		}
+	}
+}
+
+func (app *application) WsOrderBookHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := service.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	service.OBhub.Mu.Lock()
+	service.OBhub.Clients[conn] = true
+	service.OBhub.Mu.Unlock()
+
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			service.OBhub.Mu.Lock()
+			delete(service.OBhub.Clients, conn)
+			service.OBhub.Mu.Unlock()
 			conn.Close()
 			break
 		}

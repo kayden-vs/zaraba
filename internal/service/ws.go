@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/kayden-vs/zaraba/pb"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
 )
 
@@ -19,6 +21,15 @@ type Hub struct {
 }
 
 var CenterHub = Hub{
+	Clients: make(map[*websocket.Conn]bool),
+}
+
+type OrderBookHub struct {
+	Clients map[*websocket.Conn]bool
+	Mu      sync.Mutex
+}
+
+var OBhub = OrderBookHub{
 	Clients: make(map[*websocket.Conn]bool),
 }
 
@@ -79,6 +90,48 @@ func broadcast(message []pages.CoinMarketProps) {
 		if err != nil {
 			client.Close()
 			delete(CenterHub.Clients, client)
+		}
+	}
+}
+
+func StartOrderBookFetcher(symbolID string) {
+	for {
+		CenterHub.Mu.Lock()
+		clientCount := len(OBhub.Clients)
+		CenterHub.Mu.Unlock()
+
+		if clientCount == 0 {
+			log.Println("No active Orderbook clients, skipping fetch")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		data, err := NewExchangeServer().StreamOrderBook(context.Background(), &pb.OrderBookRequest{Market: symbolID})
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		broadcastOrderBook(data)
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func broadcastOrderBook(snapshot *pb.OrderbookSnapshot) {
+	OBhub.Mu.Lock()
+	defer OBhub.Mu.Unlock()
+
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		log.Println("Error marshaling orderbook:", err)
+		return
+	}
+
+	for client := range OBhub.Clients {
+		err := client.WriteMessage(websocket.TextMessage, data)
+		if err != nil {
+			client.Close()
+			delete(OBhub.Clients, client)
 		}
 	}
 }

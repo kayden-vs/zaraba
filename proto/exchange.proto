@@ -7,7 +7,7 @@ option go_package = "github.com/kayden-vs/zaraba/pb";
 service Exchange {
     rpc PlaceMarketOrder(Order) returns (Match);
     rpc PlaceLimitOrder(PlaceLimitOrderRequest) returns (Match);
-    rpc StreamOrderBook(OrderBookRequest) returns (OrderbookSnapshot)
+    rpc StreamOrderBook(OrderBookRequest) returns (OrderbookSnapshot);
 }
 
 message Order {

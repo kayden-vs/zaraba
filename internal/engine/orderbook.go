@@ -274,3 +274,17 @@ func (ob *Orderbook) AskTotalVolume() int64 {
 
 	return totalVolume
 }
+
+func (ob *Orderbook) GetSnapshot() *pb.OrderbookSnapshot {
+	snapshot := &pb.OrderbookSnapshot{}
+
+	for _, limit := range ob.Asks {
+		snapshot.Asks = append(snapshot.Asks, limit.Limit)
+	}
+
+	for _, limit := range ob.Bids {
+		snapshot.Bids = append(snapshot.Bids, limit.Limit)
+	}
+
+	return snapshot
+}

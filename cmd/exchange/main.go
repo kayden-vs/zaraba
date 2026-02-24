@@ -76,7 +76,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	exchangeServer := NewExchangeServer()
+	exchangeServer := service.NewExchangeServer()
 	pb.RegisterExchangeServer(grpcServer, exchangeServer)
 
 	go func() {

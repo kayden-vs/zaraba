@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"context"
@@ -31,7 +31,6 @@ func (s *ExchangeServer) PlaceMarketOrder(ctx context.Context, order *pb.Order) 
 		Order: order,
 	}
 
-	// Place the market order and get matches
 	matches := s.orderbook.PlaceMarketOrder(engineOrder)
 
 	// Return the first match if any, or an empty match
@@ -58,7 +57,6 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 		Order: req.Order,
 	}
 
-	// Place the limit order
 	s.orderbook.PlaceLimitOrder(req.Price, engineOrder)
 
 	// Since PlaceLimitOrder doesn't return matches, return an empty match
@@ -66,4 +64,9 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 		Ask:   req.Order,
 		Price: req.Price,
 	}, nil
+}
+
+func (s *ExchangeServer) StreamOrderBook(ctx context.Context, req *pb.OrderBookRequest) (*pb.OrderbookSnapshot, error) {
+	snapshot := s.orderbook.GetSnapshot()
+	return snapshot, nil
 }

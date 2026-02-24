@@ -107,9 +107,9 @@ func (x *Order) GetTimestamp() int64 {
 
 type Limit struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Price         int64                  `protobuf:"varint,1,opt,name=price,proto3" json:"price,omitempty"` // Price in micro-USDT (1 USDT = 1,000,000 units)
+	Price         int64                  `protobuf:"varint,1,opt,name=price,proto3" json:"price,omitempty"`
 	Orders        []*Order               `protobuf:"bytes,2,rep,name=orders,proto3" json:"orders,omitempty"`
-	TotalVolume   int64                  `protobuf:"varint,3,opt,name=total_volume,json=totalVolume,proto3" json:"total_volume,omitempty"` // Total volume in base asset integer units
+	TotalVolume   int64                  `protobuf:"varint,3,opt,name=total_volume,json=totalVolume,proto3" json:"total_volume,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -167,7 +167,7 @@ func (x *Limit) GetTotalVolume() int64 {
 
 type PlaceLimitOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Price         int64                  `protobuf:"varint,1,opt,name=price,proto3" json:"price,omitempty"` // Price in micro-USDT (1 USDT = 1,000,000 units)
+	Price         int64                  `protobuf:"varint,1,opt,name=price,proto3" json:"price,omitempty"`
 	Order         *Order                 `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -221,8 +221,8 @@ type Match struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Ask           *Order                 `protobuf:"bytes,1,opt,name=ask,proto3" json:"ask,omitempty"`
 	Bid           *Order                 `protobuf:"bytes,2,opt,name=bid,proto3" json:"bid,omitempty"`
-	SizeFilled    int64                  `protobuf:"varint,3,opt,name=sizeFilled,proto3" json:"sizeFilled,omitempty"` // Filled quantity in base asset integer units
-	Price         int64                  `protobuf:"varint,4,opt,name=price,proto3" json:"price,omitempty"`           // Price in micro-USDT (1 USDT = 1,000,000 units)
+	SizeFilled    int64                  `protobuf:"varint,3,opt,name=sizeFilled,proto3" json:"sizeFilled,omitempty"`
+	Price         int64                  `protobuf:"varint,4,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -285,6 +285,110 @@ func (x *Match) GetPrice() int64 {
 	return 0
 }
 
+type OrderBookRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Market        string                 `protobuf:"bytes,1,opt,name=market,proto3" json:"market,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OrderBookRequest) Reset() {
+	*x = OrderBookRequest{}
+	mi := &file_exchange_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OrderBookRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrderBookRequest) ProtoMessage() {}
+
+func (x *OrderBookRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_exchange_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OrderBookRequest.ProtoReflect.Descriptor instead.
+func (*OrderBookRequest) Descriptor() ([]byte, []int) {
+	return file_exchange_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *OrderBookRequest) GetMarket() string {
+	if x != nil {
+		return x.Market
+	}
+	return ""
+}
+
+type OrderbookSnapshot struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Asks          []*Limit               `protobuf:"bytes,1,rep,name=asks,proto3" json:"asks,omitempty"`
+	Bids          []*Limit               `protobuf:"bytes,2,rep,name=bids,proto3" json:"bids,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OrderbookSnapshot) Reset() {
+	*x = OrderbookSnapshot{}
+	mi := &file_exchange_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OrderbookSnapshot) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrderbookSnapshot) ProtoMessage() {}
+
+func (x *OrderbookSnapshot) ProtoReflect() protoreflect.Message {
+	mi := &file_exchange_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OrderbookSnapshot.ProtoReflect.Descriptor instead.
+func (*OrderbookSnapshot) Descriptor() ([]byte, []int) {
+	return file_exchange_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *OrderbookSnapshot) GetAsks() []*Limit {
+	if x != nil {
+		return x.Asks
+	}
+	return nil
+}
+
+func (x *OrderbookSnapshot) GetBids() []*Limit {
+	if x != nil {
+		return x.Bids
+	}
+	return nil
+}
+
+func (x *OrderbookSnapshot) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
 var File_exchange_proto protoreflect.FileDescriptor
 
 const file_exchange_proto_rawDesc = "" +
@@ -310,10 +414,17 @@ const file_exchange_proto_rawDesc = "" +
 	"\n" +
 	"sizeFilled\x18\x03 \x01(\x03R\n" +
 	"sizeFilled\x12\x14\n" +
-	"\x05price\x18\x04 \x01(\x03R\x05price2n\n" +
+	"\x05price\x18\x04 \x01(\x03R\x05price\"*\n" +
+	"\x10OrderBookRequest\x12\x16\n" +
+	"\x06market\x18\x01 \x01(\tR\x06market\"o\n" +
+	"\x11OrderbookSnapshot\x12\x1d\n" +
+	"\x04asks\x18\x01 \x03(\v2\t.pb.LimitR\x04asks\x12\x1d\n" +
+	"\x04bids\x18\x02 \x03(\v2\t.pb.LimitR\x04bids\x12\x1c\n" +
+	"\ttimestamp\x18\x03 \x01(\x03R\ttimestamp2\xae\x01\n" +
 	"\bExchange\x12(\n" +
 	"\x10PlaceMarketOrder\x12\t.pb.Order\x1a\t.pb.Match\x128\n" +
-	"\x0fPlaceLimitOrder\x12\x1a.pb.PlaceLimitOrderRequest\x1a\t.pb.MatchB Z\x1egithub.com/kayden-vs/zaraba/pbb\x06proto3"
+	"\x0fPlaceLimitOrder\x12\x1a.pb.PlaceLimitOrderRequest\x1a\t.pb.Match\x12>\n" +
+	"\x0fStreamOrderBook\x12\x14.pb.OrderBookRequest\x1a\x15.pb.OrderbookSnapshotB Z\x1egithub.com/kayden-vs/zaraba/pbb\x06proto3"
 
 var (
 	file_exchange_proto_rawDescOnce sync.Once
@@ -327,28 +438,34 @@ func file_exchange_proto_rawDescGZIP() []byte {
 	return file_exchange_proto_rawDescData
 }
 
-var file_exchange_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_exchange_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_exchange_proto_goTypes = []any{
 	(*Order)(nil),                  // 0: pb.Order
 	(*Limit)(nil),                  // 1: pb.Limit
 	(*PlaceLimitOrderRequest)(nil), // 2: pb.PlaceLimitOrderRequest
 	(*Match)(nil),                  // 3: pb.Match
+	(*OrderBookRequest)(nil),       // 4: pb.OrderBookRequest
+	(*OrderbookSnapshot)(nil),      // 5: pb.OrderbookSnapshot
 }
 var file_exchange_proto_depIdxs = []int32{
-	1, // 0: pb.Order.limit:type_name -> pb.Limit
-	0, // 1: pb.Limit.orders:type_name -> pb.Order
-	0, // 2: pb.PlaceLimitOrderRequest.order:type_name -> pb.Order
-	0, // 3: pb.Match.ask:type_name -> pb.Order
-	0, // 4: pb.Match.bid:type_name -> pb.Order
-	0, // 5: pb.Exchange.PlaceMarketOrder:input_type -> pb.Order
-	2, // 6: pb.Exchange.PlaceLimitOrder:input_type -> pb.PlaceLimitOrderRequest
-	3, // 7: pb.Exchange.PlaceMarketOrder:output_type -> pb.Match
-	3, // 8: pb.Exchange.PlaceLimitOrder:output_type -> pb.Match
-	7, // [7:9] is the sub-list for method output_type
-	5, // [5:7] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	1,  // 0: pb.Order.limit:type_name -> pb.Limit
+	0,  // 1: pb.Limit.orders:type_name -> pb.Order
+	0,  // 2: pb.PlaceLimitOrderRequest.order:type_name -> pb.Order
+	0,  // 3: pb.Match.ask:type_name -> pb.Order
+	0,  // 4: pb.Match.bid:type_name -> pb.Order
+	1,  // 5: pb.OrderbookSnapshot.asks:type_name -> pb.Limit
+	1,  // 6: pb.OrderbookSnapshot.bids:type_name -> pb.Limit
+	0,  // 7: pb.Exchange.PlaceMarketOrder:input_type -> pb.Order
+	2,  // 8: pb.Exchange.PlaceLimitOrder:input_type -> pb.PlaceLimitOrderRequest
+	4,  // 9: pb.Exchange.StreamOrderBook:input_type -> pb.OrderBookRequest
+	3,  // 10: pb.Exchange.PlaceMarketOrder:output_type -> pb.Match
+	3,  // 11: pb.Exchange.PlaceLimitOrder:output_type -> pb.Match
+	5,  // 12: pb.Exchange.StreamOrderBook:output_type -> pb.OrderbookSnapshot
+	10, // [10:13] is the sub-list for method output_type
+	7,  // [7:10] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_exchange_proto_init() }
@@ -362,7 +479,7 @@ func file_exchange_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_exchange_proto_rawDesc), len(file_exchange_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Exchange_PlaceMarketOrder_FullMethodName = "/pb.Exchange/PlaceMarketOrder"
 	Exchange_PlaceLimitOrder_FullMethodName  = "/pb.Exchange/PlaceLimitOrder"
+	Exchange_StreamOrderBook_FullMethodName  = "/pb.Exchange/StreamOrderBook"
 )
 
 // ExchangeClient is the client API for Exchange service.
@@ -29,6 +30,7 @@ const (
 type ExchangeClient interface {
 	PlaceMarketOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Match, error)
 	PlaceLimitOrder(ctx context.Context, in *PlaceLimitOrderRequest, opts ...grpc.CallOption) (*Match, error)
+	StreamOrderBook(ctx context.Context, in *OrderBookRequest, opts ...grpc.CallOption) (*OrderbookSnapshot, error)
 }
 
 type exchangeClient struct {
@@ -59,12 +61,23 @@ func (c *exchangeClient) PlaceLimitOrder(ctx context.Context, in *PlaceLimitOrde
 	return out, nil
 }
 
+func (c *exchangeClient) StreamOrderBook(ctx context.Context, in *OrderBookRequest, opts ...grpc.CallOption) (*OrderbookSnapshot, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OrderbookSnapshot)
+	err := c.cc.Invoke(ctx, Exchange_StreamOrderBook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExchangeServer is the server API for Exchange service.
 // All implementations must embed UnimplementedExchangeServer
 // for forward compatibility.
 type ExchangeServer interface {
 	PlaceMarketOrder(context.Context, *Order) (*Match, error)
 	PlaceLimitOrder(context.Context, *PlaceLimitOrderRequest) (*Match, error)
+	StreamOrderBook(context.Context, *OrderBookRequest) (*OrderbookSnapshot, error)
 	mustEmbedUnimplementedExchangeServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedExchangeServer) PlaceMarketOrder(context.Context, *Order) (*M
 }
 func (UnimplementedExchangeServer) PlaceLimitOrder(context.Context, *PlaceLimitOrderRequest) (*Match, error) {
 	return nil, status.Error(codes.Unimplemented, "method PlaceLimitOrder not implemented")
+}
+func (UnimplementedExchangeServer) StreamOrderBook(context.Context, *OrderBookRequest) (*OrderbookSnapshot, error) {
+	return nil, status.Error(codes.Unimplemented, "method StreamOrderBook not implemented")
 }
 func (UnimplementedExchangeServer) mustEmbedUnimplementedExchangeServer() {}
 func (UnimplementedExchangeServer) testEmbeddedByValue()                  {}
@@ -138,6 +154,24 @@ func _Exchange_PlaceLimitOrder_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Exchange_StreamOrderBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrderBookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExchangeServer).StreamOrderBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Exchange_StreamOrderBook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExchangeServer).StreamOrderBook(ctx, req.(*OrderBookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Exchange_ServiceDesc is the grpc.ServiceDesc for Exchange service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Exchange_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PlaceLimitOrder",
 			Handler:    _Exchange_PlaceLimitOrder_Handler,
+		},
+		{
+			MethodName: "StreamOrderBook",
+			Handler:    _Exchange_StreamOrderBook_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
