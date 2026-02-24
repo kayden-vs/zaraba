@@ -344,4 +344,23 @@ func (app *application) SseOrderBookHandler(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		app.serverError(w, fmt.Errorf("streaming not supported"))
+		return
+	}
+
+	clientChan := service.OrderbookBroker.AddClient()
+	defer service.OrderbookBroker.RemoveClient(clientChan)
+
+	for {
+		select {
+		case data := <-clientChan:
+			fmt.Fprintf(w, "data: %s\n\n", data)
+			flusher.Flush()
+		case <-r.Context().Done():
+			return
+		}
+	}
 }

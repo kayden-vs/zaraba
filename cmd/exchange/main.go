@@ -83,8 +83,6 @@ func main() {
 		}
 	}()
 
-	// start sse for orderbook
-	go service.StartOrderBookFetcher(exchangeServer)
 	// Start WebSocket price fetcher
 	go service.StartMarketFetcher()
 

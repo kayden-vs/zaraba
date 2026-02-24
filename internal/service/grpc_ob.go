@@ -33,6 +33,8 @@ func (s *ExchangeServer) PlaceMarketOrder(ctx context.Context, order *pb.Order) 
 
 	matches := s.orderbook.PlaceMarketOrder(engineOrder)
 
+	go BroadcastOrderBook(s)
+
 	// Return the first match if any, or an empty match
 	if len(matches) > 0 {
 		firstMatch := matches[0]
@@ -59,6 +61,8 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 
 	s.orderbook.PlaceLimitOrder(req.Price, engineOrder)
 
+	go BroadcastOrderBook(s)
+
 	// Since PlaceLimitOrder doesn't return matches, return an empty match
 	return &pb.Match{
 		Ask:   req.Order,
@@ -67,6 +71,8 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 }
 
 func (s *ExchangeServer) StreamOrderBook(ctx context.Context, req *pb.OrderBookRequest) (*pb.OrderbookSnapshot, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	snapshot := s.orderbook.GetSnapshot()
 	return snapshot, nil
 }

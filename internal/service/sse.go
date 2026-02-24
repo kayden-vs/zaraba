@@ -109,29 +109,19 @@ func StartMarketFetcher() {
 	}
 }
 
-func StartOrderBookFetcher(server *ExchangeServer) {
-	for {
-		if OrderbookBroker.ClientCount() == 0 {
-			time.Sleep(5 * time.Second)
-			continue
-		}
-
-		snapshot, err := server.StreamOrderBook(context.Background(), &pb.
-			OrderBookRequest{Market: "btc"})
-		if err != nil {
-			log.Println("Error fetching orderbook:", err)
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		jsonData, err := json.Marshal(snapshot)
-		if err != nil {
-			log.Println("Error marshaling snapshot data:", err)
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		OrderbookBroker.Broadcast(jsonData)
-		time.Sleep(2 * time.Second)
+// direct broadcast on order placement
+func BroadcastOrderBook(server *ExchangeServer) {
+	snapshot, err := server.StreamOrderBook(context.Background(), &pb.OrderBookRequest{Market: "btc"})
+	if err != nil {
+		log.Println("Error fetching orderbook:", err)
+		return
 	}
+
+	jsonData, err := json.Marshal(snapshot)
+	if err != nil {
+		log.Println("Error marshaling snapshot:", err)
+		return
+	}
+
+	OrderbookBroker.Broadcast(jsonData)
 }
