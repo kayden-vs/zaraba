@@ -4342,66 +4342,107 @@ main:has(.landing-page) {
   background-color: var(--bg-primary);
 }
 
-/* Gradient dots animated background — subdued so text stays readable */
-.landing-hero__gradient-dots {
+/* Hero canvas (WebGL terrain background) */
+.landing-hero__canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.35;
-  background-color: var(--bg-primary);
-  background-image:
-    radial-gradient(circle at 50% 50%, transparent 1.5px, var(--bg-primary) 0 8px, transparent 8px),
-    radial-gradient(circle at 50% 50%, transparent 1.5px, var(--bg-primary) 0 8px, transparent 8px),
-    radial-gradient(circle at 50% 50%, #cba6f7, transparent 60%),
-    radial-gradient(circle at 50% 50%, #89b4fa, transparent 60%),
-    radial-gradient(circle at 50% 50%, #94e2d5, transparent 60%),
-    radial-gradient(ellipse at 50% 50%, #b4befe, transparent 60%);
-  background-size:
-    10px 17.32px,
-    10px 17.32px,
-    200% 200%,
-    200% 200%,
-    200% 200%,
-    200% 17.32px;
-  background-position:
-    0px 0px,
-    5px 8.66px,
-    0% 0%,
-    0% 0%,
-    0% 0%,
-    0% 0%;
-  animation:
-    gradient-dots-move 30s linear infinite,
-    gradient-dots-hue 14s linear infinite;
 }
 
-@keyframes gradient-dots-move {
-  0% {
-    background-position:
-      0px 0px,
-      5px 8.66px,
-      800% 400%,
-      1000% -400%,
-      -1200% -600%,
-      400% 17.32px;
-  }
-  100% {
-    background-position:
-      0px 0px,
-      5px 8.66px,
-      0% 0%,
-      0% 0%,
-      0% 0%,
-      0% 0%;
-  }
+/* ---- Ripple cell grid (top band) ---- */
+.landing-cells {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22rem;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: auto;
 }
 
-@keyframes gradient-dots-hue {
-  0%   { filter: hue-rotate(0deg); }
-  100% { filter: hue-rotate(30deg); }
+.landing-cells__base,
+.landing-cells__spot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.landing-cells__base { z-index: 1; opacity: 0.35; }
+
+.landing-cells__spot {
+  z-index: 2;
+  mask-image: radial-gradient(75px circle at var(--spot-x, -999px) var(--spot-y, -999px), white, transparent);
+  -webkit-mask-image: radial-gradient(75px circle at var(--spot-x, -999px) var(--spot-y, -999px), white, transparent);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.landing-cells__col {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.landing-cells__cell {
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  border-left: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
+  position: relative;
+}
+
+.landing-cells__spot .landing-cells__cell {
+  border-color: var(--accent-primary);
+}
+
+.landing-cells__cell-inner {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.landing-cells__cell:hover .landing-cells__cell-inner {
+  background-color: rgba(203, 166, 247, 0.10);
+}
+
+.landing-cells__cell-inner.ripple {
+  animation: cell-ripple 0.6s ease-out forwards;
+}
+
+@keyframes cell-ripple {
+  0%   { background-color: transparent; }
+  40%  { background-color: rgba(203, 166, 247, 0.22); }
+  100% { background-color: transparent; }
+}
+
+/* Soft glow following cursor */
+.landing-cells__glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(203,166,247,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  left: var(--spot-x, -999px);
+  top: var(--spot-y, -999px);
+}
+
+/* Gradient fade toward bottom */
+.landing-cells__fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 10%, var(--bg-primary) 92%);
+  pointer-events: none;
+  z-index: 4;
 }
 
 /* Particle typography area */
@@ -4412,7 +4453,7 @@ main:has(.landing-page) {
   transform: translateX(-50%);
   width: min(90vw, 900px);
   height: 260px;
-  z-index: 1;
+  z-index: 5;
   touch-action: none;
 }
 
@@ -4425,7 +4466,7 @@ main:has(.landing-page) {
 /* Hero text content */
 .landing-hero__content {
   position: relative;
-  z-index: 2;
+  z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4601,8 +4642,10 @@ main:has(.landing-page) {
   letter-spacing: var(--tracking-wider);
 }
 
-.landing-marquee__emoji {
-  font-size: var(--text-base);
+.landing-marquee__icon {
+  display: inline-flex;
+  color: var(--accent-primary);
+  opacity: 0.6;
 }
 
 /* ------------------------------------------------------------------
