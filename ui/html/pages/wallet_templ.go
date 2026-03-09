@@ -100,59 +100,98 @@ func WalletContent(balance, LockedAmount int64, csrfToken string) templ.Componen
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span> <span class=\"currency\">USDT</span></div></div></div><div class=\"wallet-actions\"><a href=\"#deposit-section\" class=\"wallet-action-btn primary\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line> <line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line></svg> Deposit Funds</a> <a href=\"/trade/bitcoin\" class=\"wallet-action-btn\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"23 6 13.5 15.5 8.5 10.5 1 18\"></polyline> <polyline points=\"17 6 23 6 23 12\"></polyline></svg> Start Trading</a> <a href=\"/orders\" class=\"wallet-action-btn\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path> <polyline points=\"14 2 14 8 20 8\"></polyline> <line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"></line> <line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"></line> <polyline points=\"10 9 9 9 8 9\"></polyline></svg> View Orders</a> <a href=\"/markets\" class=\"wallet-action-btn\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"10\"></line> <line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"4\"></line> <line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"16\"></line></svg> Markets</a></div><!-- Deposit Section --><div id=\"deposit-section\" class=\"card mt-8\"><div class=\"card-header\"><h3>Deposit Funds</h3><p class=\"card-subtitle\">Add funds to your wallet to start trading</p></div><div class=\"card-body\"><form method=\"POST\" action=\"/api/wallet/deposit\" class=\"deposit-form\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span> <span class=\"currency\">USDT</span></div></div></div><div class=\"wallet-actions\"><a href=\"#funds-section\" class=\"wallet-action-btn primary\" onclick=\"switchTab('deposit')\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line> <line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line></svg> Deposit</a> <a href=\"#funds-section\" class=\"wallet-action-btn withdraw\" onclick=\"switchTab('withdraw')\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line></svg> Withdraw</a> <a href=\"/trade/bitcoin\" class=\"wallet-action-btn\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"23 6 13.5 15.5 8.5 10.5 1 18\"></polyline> <polyline points=\"17 6 23 6 23 12\"></polyline></svg> Trade</a> <a href=\"/orders\" class=\"wallet-action-btn\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path> <polyline points=\"14 2 14 8 20 8\"></polyline> <line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"></line> <line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"></line> <polyline points=\"10 9 9 9 8 9\"></polyline></svg> Orders</a></div><!-- Funds Section: Deposit & Withdraw --><div id=\"funds-section\" class=\"funds-panel mt-8\"><div class=\"funds-tabs\" role=\"tablist\"><button class=\"funds-tab active\" data-tab=\"deposit\" onclick=\"switchTab('deposit')\" role=\"tab\" aria-selected=\"true\"><span class=\"funds-tab-icon deposit-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"></path></svg></span> Deposit</button> <button class=\"funds-tab\" data-tab=\"withdraw\" onclick=\"switchTab('withdraw')\" role=\"tab\" aria-selected=\"false\"><span class=\"funds-tab-icon withdraw-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 7l-10 10M7 7h10v10\"></path></svg></span> Withdraw</button></div><!-- Deposit Panel --><div class=\"funds-body\" id=\"deposit-panel\" role=\"tabpanel\"><form method=\"POST\" action=\"/api/wallet/transactions\" class=\"funds-form\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 84, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 98, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"><div class=\"form-row\"><div class=\"form-group-inline\"><label for=\"depositAmount\" class=\"form-label\">Amount (USDT)</label> <input type=\"number\" id=\"depositAmount\" name=\"amount\" step=\"0.01\" min=\"1\" placeholder=\"Enter amount\" required class=\"form-input\"></div><button type=\"submit\" class=\"btn btn-primary\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"></line> <line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"></line></svg> Confirm Deposit</button></div><p class=\"form-hint\">Minimum deposit: $1.00 USDT</p></form></div></div><!-- Portfolio summary section --><div class=\"card mt-8\"><div class=\"card-header\"><h3>Portfolio Summary</h3></div><div class=\"card-body\"><table><thead><tr><th>Asset</th><th>Available</th><th>In Orders</th><th>Total</th></tr></thead> <tbody><tr><td><div class=\"symbol-cell\"><div class=\"symbol-icon\">U</div><div><div class=\"symbol-name\">Tether</div><div class=\"symbol-ticker\">USDT</div></div></div></td><td class=\"mono\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"> <input type=\"hidden\" name=\"type\" value=\"deposit\"><div class=\"funds-amount-section\"><div class=\"funds-amount-header\"><label for=\"depositAmount\" class=\"funds-label\">Deposit Amount</label> <span class=\"funds-currency-badge\">USDT</span></div><div class=\"funds-input-box\"><span class=\"funds-dollar\">$</span> <input type=\"number\" id=\"depositAmount\" name=\"amount\" step=\"0.01\" min=\"1\" placeholder=\"0.00\" required class=\"funds-amount-input\" autocomplete=\"off\"></div></div><div class=\"funds-quick-amounts\"><button type=\"button\" class=\"funds-chip\" onclick=\"setAmount('depositAmount', 10)\">$10</button> <button type=\"button\" class=\"funds-chip\" onclick=\"setAmount('depositAmount', 50)\">$50</button> <button type=\"button\" class=\"funds-chip\" onclick=\"setAmount('depositAmount', 100)\">$100</button> <button type=\"button\" class=\"funds-chip\" onclick=\"setAmount('depositAmount', 500)\">$500</button> <button type=\"button\" class=\"funds-chip\" onclick=\"setAmount('depositAmount', 1000)\">$1k</button></div><button type=\"submit\" class=\"funds-submit deposit-submit\">Deposit Funds</button><p class=\"funds-fine-print\">Minimum deposit: $1.00</p></form></div><!-- Withdraw Panel --><div class=\"funds-body hidden\" id=\"withdraw-panel\" data-available=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(balance - LockedAmount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 138, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 135, Col: 122}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</td><td class=\"mono text-tertiary\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" role=\"tabpanel\"><form method=\"POST\" action=\"/api/wallet/transactions\" class=\"funds-form\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(LockedAmount))
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 139, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 137, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</td><td class=\"mono font-medium\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"> <input type=\"hidden\" name=\"type\" value=\"withdraw\"><div class=\"funds-balance-strip\"><span>Available</span> <span class=\"mono\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(balance))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(balance - LockedAmount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 140, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 141, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</td></tr></tbody></table></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " USDT</span></div><div class=\"funds-amount-section\"><div class=\"funds-amount-header\"><label for=\"withdrawAmount\" class=\"funds-label\">Withdraw Amount</label> <span class=\"funds-currency-badge\">USDT</span></div><div class=\"funds-input-box\"><span class=\"funds-dollar\">$</span> <input type=\"number\" id=\"withdrawAmount\" name=\"amount\" step=\"0.01\" min=\"1\" placeholder=\"0.00\" required class=\"funds-amount-input\" autocomplete=\"off\"></div></div><div class=\"funds-quick-amounts\"><button type=\"button\" class=\"funds-chip\" onclick=\"setPercent(25)\">25%</button> <button type=\"button\" class=\"funds-chip\" onclick=\"setPercent(50)\">50%</button> <button type=\"button\" class=\"funds-chip\" onclick=\"setPercent(75)\">75%</button> <button type=\"button\" class=\"funds-chip funds-chip-max\" onclick=\"setPercent(100)\">Max</button></div><button type=\"submit\" class=\"funds-submit withdraw-submit\">Withdraw Funds</button><p class=\"funds-fine-print\">Minimum withdrawal: $1.00</p></form></div></div><script>\n            function switchTab(tab) {\n                document.querySelectorAll('.funds-tab').forEach(function(t) {\n                    t.classList.remove('active');\n                    t.setAttribute('aria-selected', 'false');\n                });\n                var active = document.querySelector('.funds-tab[data-tab=\"' + tab + '\"]');\n                active.classList.add('active');\n                active.setAttribute('aria-selected', 'true');\n                document.getElementById('deposit-panel').classList.toggle('hidden', tab !== 'deposit');\n                document.getElementById('withdraw-panel').classList.toggle('hidden', tab !== 'withdraw');\n            }\n            function setAmount(inputId, val) {\n                document.getElementById(inputId).value = val.toFixed(2);\n            }\n            function setPercent(pct) {\n                var raw = document.getElementById('withdraw-panel').getAttribute('data-available');\n                var num = parseFloat(raw.replace(/,/g, ''));\n                if (isNaN(num) || num < 0) num = 0;\n                var amt = (num * pct / 100);\n                document.getElementById('withdrawAmount').value = amt.toFixed(2);\n            }\n        </script><!-- Portfolio summary section --><div class=\"card mt-8\"><div class=\"card-header\"><h3>Portfolio Summary</h3></div><div class=\"card-body\"><table><thead><tr><th>Asset</th><th>Available</th><th>In Orders</th><th>Total</th></tr></thead> <tbody><tr><td><div class=\"symbol-cell\"><div class=\"symbol-icon\">U</div><div><div class=\"symbol-name\">Tether</div><div class=\"symbol-ticker\">USDT</div></div></div></td><td class=\"mono\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(balance - LockedAmount))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 227, Col: 89}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</td><td class=\"mono text-tertiary\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(LockedAmount))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 228, Col: 93}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</td><td class=\"mono font-medium\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(engine.FormatPrice(balance))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/wallet.templ`, Line: 229, Col: 86}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</td></tr></tbody></table></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1817,6 +1817,17 @@ form:not(.auth-form) > div {
   background-color: var(--accent-primary-hover);
 }
 
+.wallet-action-btn.withdraw {
+  background-color: var(--color-sell-muted);
+  border-color: var(--color-sell);
+  color: var(--color-sell);
+}
+
+.wallet-action-btn.withdraw:hover {
+  background-color: var(--color-sell-subtle);
+  border-color: var(--color-sell-hover);
+}
+
 /* ==========================================================================
    16. ACCOUNT PAGE
    ========================================================================== */
@@ -2497,9 +2508,283 @@ tbody tr:hover {
    ========================================================================== */
 
 /* ==========================================================================
-   DEPOSIT FORM STYLES
+   FUNDS PANEL STYLES (Deposit / Withdraw)
    ========================================================================== */
 
+.funds-panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+/* --- Tabs --- */
+.funds-tabs {
+  display: flex;
+  background-color: var(--bg-tertiary);
+  padding: var(--space-2);
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.funds-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.funds-tab:hover {
+  color: var(--text-secondary);
+  background-color: var(--bg-elevated);
+}
+
+.funds-tab.active {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.funds-tab-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.funds-tab-icon.deposit-icon {
+  color: var(--color-buy);
+}
+
+.funds-tab-icon.withdraw-icon {
+  color: var(--color-sell);
+}
+
+/* --- Body / Form --- */
+.funds-body {
+  padding: var(--space-8) var(--space-6);
+}
+
+.funds-form {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Balance strip (withdraw only) */
+.funds-balance-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-6);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.funds-balance-strip span:last-child {
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+/* Amount section */
+.funds-amount-section {
+  margin-bottom: var(--space-4);
+}
+
+.funds-amount-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.funds-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.funds-currency-badge {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--accent-primary);
+  background-color: var(--accent-primary-muted);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Input box */
+.funds-input-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-1) var(--space-4);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.funds-input-box:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-muted);
+}
+
+.funds-dollar {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  margin-right: var(--space-1);
+  user-select: none;
+}
+
+.funds-amount-input {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: var(--space-3) 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.funds-amount-input::placeholder {
+  color: var(--text-muted);
+  font-weight: var(--font-normal);
+}
+
+.funds-amount-input::-webkit-outer-spin-button,
+.funds-amount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.funds-amount-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Quick amount chips */
+.funds-quick-amounts {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.funds-chip {
+  flex: 1;
+  padding: var(--space-2) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  background-color: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.funds-chip:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+.funds-chip-max {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary-muted);
+}
+
+.funds-chip-max:hover {
+  background-color: var(--accent-primary-muted);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Submit buttons */
+.funds-submit {
+  display: block;
+  width: 100%;
+  padding: var(--space-4);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: var(--tracking-wide);
+}
+
+.deposit-submit {
+  background-color: var(--color-buy);
+  color: #fff;
+}
+
+.deposit-submit:hover {
+  background-color: var(--color-buy-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--color-buy-muted);
+}
+
+.withdraw-submit {
+  background-color: var(--color-sell);
+  color: #fff;
+}
+
+.withdraw-submit:hover {
+  background-color: var(--color-sell-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--color-sell-muted);
+}
+
+.funds-submit:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.funds-fine-print {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-3);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .funds-body {
+    padding: var(--space-6) var(--space-4);
+  }
+  .funds-quick-amounts {
+    flex-wrap: wrap;
+  }
+  .funds-chip {
+    min-width: calc(33% - var(--space-2));
+  }
+}
+
+/* Legacy deposit form compat */
 .deposit-form {
   max-width: 600px;
 }
@@ -2547,7 +2832,7 @@ html {
   scroll-behavior: smooth;
 }
 
-#deposit-section:target {
+#funds-section:target {
   animation: highlight 1s ease;
 }
 

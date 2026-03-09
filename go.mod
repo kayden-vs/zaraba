@@ -9,7 +9,6 @@ require (
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-playground/form v3.1.4+incompatible
-	github.com/gorilla/websocket v1.5.3
 	github.com/justinas/nosurf v1.2.0
 	github.com/lib/pq v1.4.0
 	golang.org/x/crypto v0.44.0

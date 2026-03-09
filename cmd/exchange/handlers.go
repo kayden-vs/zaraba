@@ -237,12 +237,16 @@ func (app *application) WalletHandler(w http.ResponseWriter, r *http.Request) {
 func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request) {
 	// extract data
 	value := r.FormValue("amount")
+	transctionType := r.FormValue("type")
 	amountUser, err := strconv.Atoi(value)
+
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 	amount := engine.PriceToInt(float64(amountUser))
+
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	// validate
 	if amount <= 0 {
@@ -250,14 +254,26 @@ func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// add to wallet
-	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	currBalance, err := app.wallet.GetTotalBalance(int64(userID))
 
-	_, err = app.wallet.CreditWallet(int64(userID), int64(amount))
+	if transctionType == "withdraw" && currBalance < amount {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// add to wallet
+	if transctionType == "deposit" {
+		_, err = app.wallet.CreditWallet(int64(userID), int64(amount))
+		app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d added successfully!", amountUser))
+	}
+
+	// debit from wallet
+	if transctionType == "withdraw" {
+		_, err = app.wallet.DebitWallet(int64(userID), amount)
+		app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d withdrawn successfully!", amountUser))
+	}
 
 	// TODO: add to portfolio summary
-
-	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d added successfully!", amountUser))
 
 	http.Redirect(w, r, "/user/wallet", http.StatusSeeOther)
 }
