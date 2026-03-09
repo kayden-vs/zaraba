@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: zaraba
+    runtime: go
+    plan: free
+    buildCommand: go build -o bin/exchange cmd/exchange/main.go
+    startCommand: ./bin/exchange -addr :$PORT -dsn $DATABASE_URL
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        sync: false # set manually — Supabase connection string
+      - key: API_KEY
+        sync: false # CoinGecko API key
+      - key: GO_VERSION
+        value: "1.23.0"
