@@ -77,175 +77,175 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if symbols != nil && len(symbols) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"markets-table\"><table><thead><tr><th>Market</th><th>Price</th><th>24h Change</th><th>24h Volume</th><th></th></tr></thead> <tbody id=\"markets-tbody\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"ft-table\"><!-- Header --><div class=\"ft-header\"><div class=\"ft-col ft-col-market\">Market</div><div class=\"ft-col\">Price</div><div class=\"ft-col\">24h Change</div><div class=\"ft-col\">24h Volume</div><div class=\"ft-col ft-col-action\"></div></div><!-- Rows --><div id=\"markets-tbody\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			for _, symbol := range symbols {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<tr class=\"clickable market-row\" data-symbol=\"")
+			for i, symbol := range symbols {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToLower(symbol.ID))
+				var templ_7745c5c3_Var3 templ.SafeURL
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 50, Col: 101}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 50, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" data-change=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"ft-row market-row\" data-symbol=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
-				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.4f", symbol.Change24h))
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToLower(symbol.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 50, Col: 155}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 52, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"><td><a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" data-change=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var5 templ.SafeURL
-				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)))
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.4f", symbol.Change24h))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 52, Col: 99}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 53, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><div class=\"symbol-cell\"><div class=\"symbol-icon\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" style=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
-				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(getSymbolInitial(symbol.Symbol))
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("animation-delay: %dms", i*40))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 54, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 54, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div><div class=\"symbol-name\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><!-- Market --><div class=\"ft-col ft-col-market\"><div class=\"ft-symbol-icon\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Name)
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(getSymbolInitial(symbol.Symbol))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 56, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 58, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><div class=\"symbol-ticker\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><div class=\"ft-symbol-info\"><div class=\"ft-symbol-name\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var8 string
-				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Symbol))
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(symbol.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 57, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 60, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "/USDT</div></div></div></a></td><td class=\"price-cell mono\">$")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div class=\"ft-symbol-ticker\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", symbol.Price))
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(strings.ToUpper(symbol.Symbol))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 62, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 61, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "/USDT</div></div></div><!-- Price --><div class=\"ft-col\"><span class=\"ft-price price-cell mono\">$")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var10 string
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", symbol.Price))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 67, Col: 107}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></div><!-- 24h Change --><div class=\"ft-col\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if symbol.Change24h >= 0 {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<td class=\"change-cell positive mono\">+")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var10 string
-					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", symbol.Change24h))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 64, Col: 114}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "%</td>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<td class=\"change-cell negative mono\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<span class=\"ft-badge ft-badge--positive\">+")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var11 string
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", symbol.Change24h))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 66, Col: 113}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 73, Col: 118}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "%</td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "%</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<span class=\"ft-badge ft-badge--negative\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var12 string
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", symbol.Change24h))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 75, Col: 117}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "%</span>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<td class=\"volume-cell mono\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><!-- Volume --><div class=\"ft-col\"><span class=\"ft-value mono\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(FormatNumberShort(symbol.Volume))
+				var templ_7745c5c3_Var13 string
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(FormatNumberShort(symbol.Volume))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 68, Col: 95}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</td><td><a href=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var13 templ.SafeURL
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 70, Col: 99}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/markets.templ`, Line: 81, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" class=\"btn btn-sm btn-ghost\">Trade</a></td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span></div><!-- Action --><div class=\"ft-col ft-col-action\"><span class=\"ft-trade-btn\">Trade <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></span></div></a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -255,7 +255,7 @@ func MarketsBody(symbols []CoinMarketProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><script>\n        document.addEventListener('DOMContentLoaded', function() {\n            const searchInput = document.getElementById('market-search');\n            const rows = document.querySelectorAll('.market-row');\n            const filterTabs = document.querySelectorAll('.filter-tab');\n            \n            // Search functionality\n            searchInput.addEventListener('input', function() {\n                const searchTerm = this.value.toLowerCase();\n                rows.forEach(row => {\n                    const symbol = row.dataset.symbol;\n                    const text = row.textContent.toLowerCase();\n                    if (text.includes(searchTerm) || symbol.includes(searchTerm)) {\n                        row.style.display = '';\n                    } else {\n                        row.style.display = 'none';\n                    }\n                });\n            });\n\n            // Filter tabs\n            filterTabs.forEach(tab => {\n                tab.addEventListener('click', function() {\n                    filterTabs.forEach(t => t.classList.remove('active'));\n                    this.classList.add('active');\n                    \n                    const filter = this.dataset.filter;\n                    rows.forEach(row => {\n                        const change = parseFloat(row.dataset.change);\n                        row.style.display = '';\n                        \n                        if (filter === 'gainers' && change < 0) {\n                            row.style.display = 'none';\n                        } else if (filter === 'losers' && change >= 0) {\n                            row.style.display = 'none';\n                        }\n                    });\n                });\n            });\n\n            // Row click navigation\n            rows.forEach(row => {\n                row.addEventListener('click', function(e) {\n                    if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {\n                        window.location.href = '/trade/' + this.dataset.symbol;\n                    }\n                });\n            });\n\n            // WebSocket - Track previous prices for flash effect\n            const previousPrices = new Map();\n            \n            // Initialize previous prices from current page data\n            rows.forEach(row => {\n                const priceCell = row.querySelector('.price-cell');\n                if (priceCell) {\n                    const priceText = priceCell.textContent.replace('$', '');\n                    const price = parseFloat(priceText);\n                    previousPrices.set(row.dataset.symbol, price);\n                }\n            });\n\n            const es = new EventSource('/sse/markets');\n\n            es.onmessage = function(event) {\n                const symbols = JSON.parse(event.data);\n                \n                symbols.forEach(symbol => {\n                    const symbolId = symbol.id.toLowerCase();\n                    const row = document.querySelector(`tr[data-symbol=\"${symbolId}\"]`);\n                    if (!row) return;\n                    \n                    const priceCell = row.querySelector('.price-cell');\n                    const newPrice = symbol.current_price;\n                    const oldPrice = previousPrices.get(symbolId);\n                    \n                    // Update price with flash effect\n                    if (oldPrice !== undefined && oldPrice !== newPrice) {\n                        priceCell.classList.remove('price-flash-up', 'price-flash-down');\n                        void priceCell.offsetWidth; // trigger reflow to restart animation\n                        \n                        if (newPrice > oldPrice) {\n                            priceCell.classList.add('price-flash-up');\n                        } else if (newPrice < oldPrice) {\n                            priceCell.classList.add('price-flash-down');\n                        }\n                    }\n                    \n                    priceCell.textContent = '$' + newPrice.toFixed(2);\n                    previousPrices.set(symbolId, newPrice);\n                    \n                    // Update 24h change\n                    const change = symbol.price_change_percentage_24h;\n                    const changeCell = row.querySelector('.change-cell');\n                    changeCell.className = 'change-cell mono ' + (change >= 0 ? 'positive' : 'negative');\n                    changeCell.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';\n                    \n                    // Update volume\n                    const volume = symbol.total_volume;\n                    row.querySelector('.volume-cell').textContent = \n                        volume >= 1e9 ? (volume/1e9).toFixed(2) + 'B' :\n                        volume >= 1e6 ? (volume/1e6).toFixed(2) + 'M' : \n                        (volume/1e3).toFixed(2) + 'K';\n                });\n            };\n\n            es.onerror = function() {\n                console.log('SSE connection lost, browser will auto-reconnect...');\n            };\n        });\n    </script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><script>\n        document.addEventListener('DOMContentLoaded', function() {\n            const searchInput = document.getElementById('market-search');\n            const filterTabs = document.querySelectorAll('.filter-tab');\n\n            function getRows() {\n                return document.querySelectorAll('.market-row');\n            }\n\n            // Search functionality\n            searchInput.addEventListener('input', function() {\n                const searchTerm = this.value.toLowerCase();\n                getRows().forEach(function(row) {\n                    var symbol = row.dataset.symbol;\n                    var text = row.textContent.toLowerCase();\n                    row.style.display = (text.includes(searchTerm) || symbol.includes(searchTerm)) ? '' : 'none';\n                });\n            });\n\n            // Filter tabs\n            filterTabs.forEach(function(tab) {\n                tab.addEventListener('click', function() {\n                    filterTabs.forEach(function(t) { t.classList.remove('active'); });\n                    this.classList.add('active');\n                    var filter = this.dataset.filter;\n                    getRows().forEach(function(row) {\n                        var change = parseFloat(row.dataset.change);\n                        row.style.display = '';\n                        if (filter === 'gainers' && change < 0) row.style.display = 'none';\n                        else if (filter === 'losers' && change >= 0) row.style.display = 'none';\n                    });\n                });\n            });\n\n            // SSE live updates\n            var previousPrices = new Map();\n            getRows().forEach(function(row) {\n                var priceEl = row.querySelector('.price-cell');\n                if (priceEl) {\n                    previousPrices.set(row.dataset.symbol, parseFloat(priceEl.textContent.replace('$', '')));\n                }\n            });\n\n            var es = new EventSource('/sse/markets');\n            es.onmessage = function(event) {\n                var symbols = JSON.parse(event.data);\n                symbols.forEach(function(sym) {\n                    var id = sym.id.toLowerCase();\n                    var row = document.querySelector('.market-row[data-symbol=\"' + id + '\"]');\n                    if (!row) return;\n\n                    var priceEl = row.querySelector('.price-cell');\n                    var newPrice = sym.current_price;\n                    var oldPrice = previousPrices.get(id);\n\n                    if (oldPrice !== undefined && oldPrice !== newPrice) {\n                        priceEl.classList.remove('price-flash-up', 'price-flash-down');\n                        void priceEl.offsetWidth;\n                        priceEl.classList.add(newPrice > oldPrice ? 'price-flash-up' : 'price-flash-down');\n                    }\n                    priceEl.textContent = '$' + newPrice.toFixed(2);\n                    previousPrices.set(id, newPrice);\n\n                    // Update change badge\n                    var change = sym.price_change_percentage_24h;\n                    var badge = row.querySelector('.ft-badge');\n                    badge.className = 'ft-badge ' + (change >= 0 ? 'ft-badge--positive' : 'ft-badge--negative');\n                    badge.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';\n\n                    // Update data-change for filters\n                    row.dataset.change = change.toFixed(4);\n\n                    // Update volume\n                    var vol = sym.total_volume;\n                    var volStr = vol >= 1e12 ? (vol/1e12).toFixed(2) + 'T' :\n                                 vol >= 1e9  ? (vol/1e9).toFixed(2) + 'B' :\n                                 vol >= 1e6  ? (vol/1e6).toFixed(2) + 'M' :\n                                               (vol/1e3).toFixed(2) + 'K';\n                    row.querySelector('.ft-value').textContent = volStr;\n                });\n            };\n            es.onerror = function() {\n                console.log('SSE connection lost, browser will auto-reconnect...');\n            };\n        });\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

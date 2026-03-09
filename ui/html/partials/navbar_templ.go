@@ -29,35 +29,73 @@ func NavBar(isAuthenticated bool, csrfToken string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<nav class=\"navbar\"><div><a href=\"/markets\">Markets</a></div><div><a href=\"/trade/bitcoin\">Trade</a></div><div><a href=\"/orders\">Orders</a></div><div><a href=\"/user/wallet\">Wallet</a></div><div class=\"ml-auto\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"site-header\"><div class=\"header-container\"><!-- Left: Brand + Navigation Links --><div class=\"header-left\"><a href=\"/markets\" class=\"header-brand-link\"><span class=\"header-brand-mark\"></span> <span>Zaraba</span></a><nav class=\"header-nav header-nav--desktop\"><a href=\"/markets\" class=\"header-nav-link\">Markets</a> <a href=\"/trade/bitcoin\" class=\"header-nav-link\">Trade</a> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if isAuthenticated {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div><a href=\"/account/view\">Account</a></div><div><form action=\"/user/logout\" method=\"POST\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/user/wallet\" class=\"header-nav-link\">Wallet</a>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</nav></div><!-- Right: Action Buttons --><div class=\"header-actions\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if isAuthenticated {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"magnetic-wrap\"><a href=\"/account/view\" class=\"btn btn-ghost btn-sm header-actions--desktop\">Account</a></div><span class=\"header-divider header-actions--desktop\"></span><div class=\"magnetic-wrap\"><form action=\"/user/logout\" method=\"POST\" class=\"header-logout-form\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/partials/navbar.templ`, Line: 24, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/partials/navbar.templ`, Line: 30, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"> <button type=\"submit\">Logout</button></form></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"> <button type=\"submit\" class=\"btn btn-outline btn-sm\">Logout</button></form></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div><a href=\"/user/signup\" class=\"btn btn-ghost btn-sm\">Sign Up</a></div><div><a href=\"/user/login\" class=\"btn btn-primary btn-sm\">Login</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"magnetic-wrap\"><a href=\"/user/login\" class=\"btn btn-outline btn-sm\">Sign in</a></div><div class=\"magnetic-wrap\"><a href=\"/user/signup\" class=\"btn btn-primary btn-sm\">Get started</a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><!-- Mobile: Hamburger Toggle --><button class=\"header-mobile-toggle\" onclick=\"document.querySelector('.header-mobile-menu').classList.toggle('is-open'); this.classList.toggle('is-active')\" aria-label=\"Toggle menu\"><svg class=\"icon-menu\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"4\" x2=\"20\" y1=\"12\" y2=\"12\"></line><line x1=\"4\" x2=\"20\" y1=\"6\" y2=\"6\"></line><line x1=\"4\" x2=\"20\" y1=\"18\" y2=\"18\"></line></svg> <svg class=\"icon-close\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></button></div><!-- Mobile Menu Dropdown --><div class=\"header-mobile-menu\"><div class=\"header-mobile-menu-inner\"><a href=\"/markets\" class=\"mobile-nav-link\"><span>Markets</span> <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></a> <a href=\"/trade/bitcoin\" class=\"mobile-nav-link\"><span>Trade</span> <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></a> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if isAuthenticated {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<a href=\"/user/wallet\" class=\"mobile-nav-link\"><span>Wallet</span> <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></a> <a href=\"/account/view\" class=\"mobile-nav-link\"><span>Account</span> <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></a><div class=\"mobile-menu-actions\"><form action=\"/user/logout\" method=\"POST\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(csrfToken)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/partials/navbar.templ`, Line: 73, Col: 84}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"> <button type=\"submit\" class=\"btn btn-outline btn-block\">Logout</button></form></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"mobile-menu-actions\"><a href=\"/user/login\" class=\"btn btn-outline btn-block\">Sign in</a> <a href=\"/user/signup\" class=\"btn btn-primary btn-block\">Get started</a></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

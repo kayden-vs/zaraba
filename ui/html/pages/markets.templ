@@ -34,45 +34,62 @@ templ MarketsBody(symbols []CoinMarketProps) {
         </div>
 
         if symbols != nil && len(symbols) > 0 {
-            <div class="markets-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Market</th>
-                            <th>Price</th>
-                            <th>24h Change</th>
-                            <th>24h Volume</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="markets-tbody">
-                        for _, symbol := range symbols {
-                            <tr class="clickable market-row" data-symbol={ strings.ToLower(symbol.ID) } data-change={ fmt.Sprintf("%.4f", symbol.Change24h) }>
-                                <td>
-                                    <a href={ templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)) }>
-                                        <div class="symbol-cell">
-                                            <div class="symbol-icon">{ getSymbolInitial(symbol.Symbol) }</div>
-                                            <div>
-                                                <div class="symbol-name">{ symbol.Name }</div>
-                                                <div class="symbol-ticker">{ strings.ToUpper(symbol.Symbol) }/USDT</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td class="price-cell mono">${ fmt.Sprintf("%.2f", symbol.Price) }</td>
+            <div class="ft-table">
+                <!-- Header -->
+                <div class="ft-header">
+                    <div class="ft-col ft-col-market">Market</div>
+                    <div class="ft-col">Price</div>
+                    <div class="ft-col">24h Change</div>
+                    <div class="ft-col">24h Volume</div>
+                    <div class="ft-col ft-col-action"></div>
+                </div>
+
+                <!-- Rows -->
+                <div id="markets-tbody">
+                    for i, symbol := range symbols {
+                        <a href={ templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)) }
+                           class="ft-row market-row"
+                           data-symbol={ strings.ToLower(symbol.ID) }
+                           data-change={ fmt.Sprintf("%.4f", symbol.Change24h) }
+                           style={ fmt.Sprintf("animation-delay: %dms", i*40) }>
+
+                            <!-- Market -->
+                            <div class="ft-col ft-col-market">
+                                <div class="ft-symbol-icon">{ getSymbolInitial(symbol.Symbol) }</div>
+                                <div class="ft-symbol-info">
+                                    <div class="ft-symbol-name">{ symbol.Name }</div>
+                                    <div class="ft-symbol-ticker">{ strings.ToUpper(symbol.Symbol) }/USDT</div>
+                                </div>
+                            </div>
+
+                            <!-- Price -->
+                            <div class="ft-col">
+                                <span class="ft-price price-cell mono">${ fmt.Sprintf("%.2f", symbol.Price) }</span>
+                            </div>
+
+                            <!-- 24h Change -->
+                            <div class="ft-col">
                                 if symbol.Change24h >= 0 {
-                                    <td class="change-cell positive mono">+{ fmt.Sprintf("%.2f", symbol.Change24h) }%</td>
+                                    <span class="ft-badge ft-badge--positive">+{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
                                 } else {
-                                    <td class="change-cell negative mono">{ fmt.Sprintf("%.2f", symbol.Change24h) }%</td>
+                                    <span class="ft-badge ft-badge--negative">{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
                                 }
-                                <td class="volume-cell mono">{ FormatNumberShort(symbol.Volume) }</td>
-                                <td>
-                                    <a href={ templ.SafeURL("/trade/" + strings.ToLower(symbol.ID)) } class="btn btn-sm btn-ghost">Trade</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                            </div>
+
+                            <!-- Volume -->
+                            <div class="ft-col">
+                                <span class="ft-value mono">{ FormatNumberShort(symbol.Volume) }</span>
+                            </div>
+
+                            <!-- Action -->
+                            <div class="ft-col ft-col-action">
+                                <span class="ft-trade-btn">Trade
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                </span>
+                            </div>
+                        </a>
+                    }
+                </div>
             </div>
         } else {
             <div class="empty-state">
@@ -84,109 +101,84 @@ templ MarketsBody(symbols []CoinMarketProps) {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('market-search');
-            const rows = document.querySelectorAll('.market-row');
             const filterTabs = document.querySelectorAll('.filter-tab');
-            
+
+            function getRows() {
+                return document.querySelectorAll('.market-row');
+            }
+
             // Search functionality
             searchInput.addEventListener('input', function() {
                 const searchTerm = this.value.toLowerCase();
-                rows.forEach(row => {
-                    const symbol = row.dataset.symbol;
-                    const text = row.textContent.toLowerCase();
-                    if (text.includes(searchTerm) || symbol.includes(searchTerm)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                getRows().forEach(function(row) {
+                    var symbol = row.dataset.symbol;
+                    var text = row.textContent.toLowerCase();
+                    row.style.display = (text.includes(searchTerm) || symbol.includes(searchTerm)) ? '' : 'none';
                 });
             });
 
             // Filter tabs
-            filterTabs.forEach(tab => {
+            filterTabs.forEach(function(tab) {
                 tab.addEventListener('click', function() {
-                    filterTabs.forEach(t => t.classList.remove('active'));
+                    filterTabs.forEach(function(t) { t.classList.remove('active'); });
                     this.classList.add('active');
-                    
-                    const filter = this.dataset.filter;
-                    rows.forEach(row => {
-                        const change = parseFloat(row.dataset.change);
+                    var filter = this.dataset.filter;
+                    getRows().forEach(function(row) {
+                        var change = parseFloat(row.dataset.change);
                         row.style.display = '';
-                        
-                        if (filter === 'gainers' && change < 0) {
-                            row.style.display = 'none';
-                        } else if (filter === 'losers' && change >= 0) {
-                            row.style.display = 'none';
-                        }
+                        if (filter === 'gainers' && change < 0) row.style.display = 'none';
+                        else if (filter === 'losers' && change >= 0) row.style.display = 'none';
                     });
                 });
             });
 
-            // Row click navigation
-            rows.forEach(row => {
-                row.addEventListener('click', function(e) {
-                    if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
-                        window.location.href = '/trade/' + this.dataset.symbol;
-                    }
-                });
-            });
-
-            // WebSocket - Track previous prices for flash effect
-            const previousPrices = new Map();
-            
-            // Initialize previous prices from current page data
-            rows.forEach(row => {
-                const priceCell = row.querySelector('.price-cell');
-                if (priceCell) {
-                    const priceText = priceCell.textContent.replace('$', '');
-                    const price = parseFloat(priceText);
-                    previousPrices.set(row.dataset.symbol, price);
+            // SSE live updates
+            var previousPrices = new Map();
+            getRows().forEach(function(row) {
+                var priceEl = row.querySelector('.price-cell');
+                if (priceEl) {
+                    previousPrices.set(row.dataset.symbol, parseFloat(priceEl.textContent.replace('$', '')));
                 }
             });
 
-            const es = new EventSource('/sse/markets');
-
+            var es = new EventSource('/sse/markets');
             es.onmessage = function(event) {
-                const symbols = JSON.parse(event.data);
-                
-                symbols.forEach(symbol => {
-                    const symbolId = symbol.id.toLowerCase();
-                    const row = document.querySelector(`tr[data-symbol="${symbolId}"]`);
+                var symbols = JSON.parse(event.data);
+                symbols.forEach(function(sym) {
+                    var id = sym.id.toLowerCase();
+                    var row = document.querySelector('.market-row[data-symbol="' + id + '"]');
                     if (!row) return;
-                    
-                    const priceCell = row.querySelector('.price-cell');
-                    const newPrice = symbol.current_price;
-                    const oldPrice = previousPrices.get(symbolId);
-                    
-                    // Update price with flash effect
+
+                    var priceEl = row.querySelector('.price-cell');
+                    var newPrice = sym.current_price;
+                    var oldPrice = previousPrices.get(id);
+
                     if (oldPrice !== undefined && oldPrice !== newPrice) {
-                        priceCell.classList.remove('price-flash-up', 'price-flash-down');
-                        void priceCell.offsetWidth; // trigger reflow to restart animation
-                        
-                        if (newPrice > oldPrice) {
-                            priceCell.classList.add('price-flash-up');
-                        } else if (newPrice < oldPrice) {
-                            priceCell.classList.add('price-flash-down');
-                        }
+                        priceEl.classList.remove('price-flash-up', 'price-flash-down');
+                        void priceEl.offsetWidth;
+                        priceEl.classList.add(newPrice > oldPrice ? 'price-flash-up' : 'price-flash-down');
                     }
-                    
-                    priceCell.textContent = '$' + newPrice.toFixed(2);
-                    previousPrices.set(symbolId, newPrice);
-                    
-                    // Update 24h change
-                    const change = symbol.price_change_percentage_24h;
-                    const changeCell = row.querySelector('.change-cell');
-                    changeCell.className = 'change-cell mono ' + (change >= 0 ? 'positive' : 'negative');
-                    changeCell.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
-                    
+                    priceEl.textContent = '$' + newPrice.toFixed(2);
+                    previousPrices.set(id, newPrice);
+
+                    // Update change badge
+                    var change = sym.price_change_percentage_24h;
+                    var badge = row.querySelector('.ft-badge');
+                    badge.className = 'ft-badge ' + (change >= 0 ? 'ft-badge--positive' : 'ft-badge--negative');
+                    badge.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+
+                    // Update data-change for filters
+                    row.dataset.change = change.toFixed(4);
+
                     // Update volume
-                    const volume = symbol.total_volume;
-                    row.querySelector('.volume-cell').textContent = 
-                        volume >= 1e9 ? (volume/1e9).toFixed(2) + 'B' :
-                        volume >= 1e6 ? (volume/1e6).toFixed(2) + 'M' : 
-                        (volume/1e3).toFixed(2) + 'K';
+                    var vol = sym.total_volume;
+                    var volStr = vol >= 1e12 ? (vol/1e12).toFixed(2) + 'T' :
+                                 vol >= 1e9  ? (vol/1e9).toFixed(2) + 'B' :
+                                 vol >= 1e6  ? (vol/1e6).toFixed(2) + 'M' :
+                                               (vol/1e3).toFixed(2) + 'K';
+                    row.querySelector('.ft-value').textContent = volStr;
                 });
             };
-
             es.onerror = function() {
                 console.log('SSE connection lost, browser will auto-reconnect...');
             };

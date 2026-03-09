@@ -44,7 +44,7 @@ func Base(title string, flash string, isAuthenticated bool, csrfToken string, bo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " - Zaraba</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Montserrat:wght@400;500;600;700&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/static/css/main.css\"></head><body><header><h1><a href=\"/markets\">Zaraba</a></h1>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " - Zaraba</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Montserrat:wght@400;500;600;700&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/static/css/main.css\"></head><body><div class=\"bg-pattern bg-pattern--dots bg-pattern--mask-fade-edges\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -52,34 +52,38 @@ func Base(title string, flash string, isAuthenticated bool, csrfToken string, bo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</header><main class=\"animate-fade-in\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<main class=\"animate-fade-in\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = body.Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if flash != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"flash\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"toast-container\" id=\"toast-container\"><div class=\"toast\" id=\"toast-flash\"><div class=\"toast-content\"><div class=\"toast-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"></path><polyline points=\"22 4 12 14.01 9 11.01\"></polyline></svg></div><div class=\"toast-body\"><div class=\"toast-title\">Notification</div><div class=\"toast-description\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(flash)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/base.templ`, Line: 25, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/base.templ`, Line: 33, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></div></div><button class=\"toast-close\" onclick=\"this.closest('.toast').classList.add('toast--exit'); setTimeout(function(){ var c = document.getElementById('toast-container'); if(c) c.remove(); }, 300)\" aria-label=\"Close\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></button></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = body.Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<script>\n        (function() {\n            // Magnetic button effect\n            var DISTANCE = 0.6;\n            var wraps = document.querySelectorAll('.magnetic-wrap');\n            wraps.forEach(function(el) {\n                var hovered = false;\n                el.addEventListener('mouseenter', function() { hovered = true; });\n                el.addEventListener('mouseleave', function() {\n                    hovered = false;\n                    el.style.transform = 'translate(0px, 0px)';\n                });\n                document.addEventListener('mousemove', function(e) {\n                    if (!hovered) return;\n                    var rect = el.getBoundingClientRect();\n                    var cx = rect.left + rect.width / 2;\n                    var cy = rect.top + rect.height / 2;\n                    var dx = (e.clientX - cx) * DISTANCE;\n                    var dy = (e.clientY - cy) * DISTANCE;\n                    el.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';\n                });\n            });\n\n            // Toast auto-dismiss after 5s\n            var toast = document.getElementById('toast-flash');\n            if (toast) {\n                setTimeout(function() {\n                    toast.classList.add('toast--exit');\n                    setTimeout(function() {\n                        var c = document.getElementById('toast-container');\n                        if (c) c.remove();\n                    }, 300);\n                }, 5000);\n            }\n        })();\n        </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
