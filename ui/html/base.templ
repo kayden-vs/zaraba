@@ -16,6 +16,43 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
         <link rel='stylesheet' href='/static/css/main.css'>
     </head>
     <body>
+        <!-- Page-transition loader -->
+        <div class="page-loader" id="page-loader">
+            <div class="loader-dots">
+                <div class="loader-dot-col">
+                    <div class="loader-dot-bounce">
+                        <div class="loader-dot-sphere"></div>
+                        <div class="loader-dot-highlight"></div>
+                    </div>
+                    <div class="loader-dot-ripple"></div>
+                    <div class="loader-dot-shadow"></div>
+                </div>
+                <div class="loader-dot-col">
+                    <div class="loader-dot-bounce">
+                        <div class="loader-dot-sphere"></div>
+                        <div class="loader-dot-highlight"></div>
+                    </div>
+                    <div class="loader-dot-ripple"></div>
+                    <div class="loader-dot-shadow"></div>
+                </div>
+                <div class="loader-dot-col">
+                    <div class="loader-dot-bounce">
+                        <div class="loader-dot-sphere"></div>
+                        <div class="loader-dot-highlight"></div>
+                    </div>
+                    <div class="loader-dot-ripple"></div>
+                    <div class="loader-dot-shadow"></div>
+                </div>
+                <div class="loader-dot-col">
+                    <div class="loader-dot-bounce">
+                        <div class="loader-dot-sphere"></div>
+                        <div class="loader-dot-highlight"></div>
+                    </div>
+                    <div class="loader-dot-ripple"></div>
+                    <div class="loader-dot-shadow"></div>
+                </div>
+            </div>
+        </div>
         <div class="bg-pattern bg-pattern--dots bg-pattern--mask-fade-edges"></div>
         @partials.NavBar(isAuthenticated, csrfToken)
         <main class="animate-fade-in">
@@ -116,6 +153,34 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
 
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') closePopover();
+                });
+            }
+
+            // Page-transition loader
+            var loader = document.getElementById('page-loader');
+            if (loader) {
+                // Show loader on internal navigation clicks
+                document.addEventListener('click', function(e) {
+                    var link = e.target.closest('a[href]');
+                    if (!link) return;
+                    var href = link.getAttribute('href');
+                    // Skip non-navigation links
+                    if (!href || href.startsWith('#') || href.startsWith('javascript') ||
+                        link.target === '_blank' || link.hasAttribute('download') ||
+                        e.ctrlKey || e.metaKey || e.shiftKey) return;
+                    // Skip external links
+                    if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
+                    loader.classList.add('is-active');
+                });
+
+                // Show loader on form submissions
+                document.addEventListener('submit', function() {
+                    loader.classList.add('is-active');
+                });
+
+                // Hide loader when navigating back/forward
+                window.addEventListener('pageshow', function() {
+                    loader.classList.remove('is-active');
                 });
             }
         })();
