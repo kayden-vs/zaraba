@@ -182,8 +182,6 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 // ----- AUTH END -------
 
-func (app *application) PlaceOrderPost(w http.ResponseWriter, r *http.Request) {}
-
 func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {}
 
 func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
@@ -264,51 +262,6 @@ func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, "/user/wallet", http.StatusSeeOther)
 }
 
-// func (app *application) WsHandler(w http.ResponseWriter, r *http.Request) {
-// 	conn, err := service.Upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return
-// 	}
-
-// 	service.CenterHub.Mu.Lock()
-// 	service.CenterHub.Clients[conn] = true
-// 	service.CenterHub.Mu.Unlock()
-
-// 	// Keep connection alive
-// 	for {
-// 		if _, _, err := conn.ReadMessage(); err != nil {
-// 			service.CenterHub.Mu.Lock()
-// 			delete(service.CenterHub.Clients, conn)
-// 			service.CenterHub.Mu.Unlock()
-// 			conn.Close()
-// 			break
-// 		}
-// 	}
-// }
-
-// func (app *application) WsOrderBookHandler(w http.ResponseWriter, r *http.Request) {
-// 	conn, err := service.Upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return
-// 	}
-
-// 	service.OBhub.Mu.Lock()
-// 	service.OBhub.Clients[conn] = true
-// 	service.OBhub.Mu.Unlock()
-
-// 	for {
-// 		if _, _, err := conn.ReadMessage(); err != nil {
-// 			service.OBhub.Mu.Lock()
-// 			delete(service.OBhub.Clients, conn)
-// 			service.OBhub.Mu.Unlock()
-// 			conn.Close()
-// 			break
-// 		}
-// 	}
-// }
-
 func (app *application) SseMarketHandler(w http.ResponseWriter, r *http.Request) {
 	// set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -377,3 +330,7 @@ func (app *application) SseOrderBookHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 }
+
+func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Request) {}
+
+func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Request) {}

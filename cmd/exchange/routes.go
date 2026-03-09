@@ -49,7 +49,8 @@ func (app *application) routes() http.Handler {
 			r.Use(app.requireAuthentication)
 
 			r.Post("/user/logout", app.userLogoutPost)
-			r.Post("/trade/{symbol}/placeorder", app.PlaceOrderPost)
+			r.Post("/trade/{symbol}/placemarketorder", app.PlaceMarketOrderPost)
+			r.Post("/trade/{symbol}/placelimitorder", app.PlaceLimitOrderPost)
 			r.Get("/user/wallet", app.WalletHandler)
 			r.Post("/api/wallet/deposit", app.WalletHandlerPost)
 		})
