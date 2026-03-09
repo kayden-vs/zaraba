@@ -1,5 +1,5 @@
 build:
-	go build -o bin/exchange cmd/exchange/main.go
+	go build -o bin/exchange ./cmd/exchange/
 
 run: build
 	./bin/exchange

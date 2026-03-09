@@ -3,7 +3,7 @@ services:
     name: zaraba
     runtime: go
     plan: free
-    buildCommand: go build -o bin/exchange cmd/exchange/main.go
+    buildCommand: go build -o bin/exchange ./cmd/exchange/
     startCommand: ./bin/exchange -addr :$PORT -dsn $DATABASE_URL
     envVars:
       - key: PORT
