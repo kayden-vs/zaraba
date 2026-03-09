@@ -3618,45 +3618,203 @@ tbody tr:hover {
   color: var(--accent-primary);
 }
 
-/* Submit buttons */
-.funds-submit {
-  display: block;
+/* Submit buttons — Slide to confirm */
+.slide-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
-  padding: var(--space-4);
-  font-size: var(--text-base);
+  height: 3.25rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  cursor: default;
+}
+
+/* Inset track */
+.slide-btn__track {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.slide-btn--deposit .slide-btn__track {
+  background-color: rgba(166, 227, 161, 0.10);
+  border: 1px solid rgba(166, 227, 161, 0.15);
+}
+
+.slide-btn--withdraw .slide-btn__track {
+  background-color: rgba(243, 139, 168, 0.10);
+  border: 1px solid rgba(243, 139, 168, 0.15);
+}
+
+/* Progress fill that follows the thumb */
+.slide-btn__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  width: 0;
+  transition: none;
+}
+
+.slide-btn--deposit .slide-btn__fill {
+  background: linear-gradient(90deg, rgba(166, 227, 161, 0.25), rgba(166, 227, 161, 0.08));
+}
+
+.slide-btn--withdraw .slide-btn__fill {
+  background: linear-gradient(90deg, rgba(243, 139, 168, 0.25), rgba(243, 139, 168, 0.08));
+}
+
+/* Spring-back on the fill */
+.slide-btn__fill.animate-back {
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Label text */
+.slide-btn__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-fast);
   letter-spacing: var(--tracking-wide);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
-.deposit-submit {
-  background-color: var(--color-buy);
-  color: #fff;
+.slide-btn--deposit .slide-btn__label {
+  color: var(--color-buy);
 }
 
-.deposit-submit:hover {
-  background-color: var(--color-buy-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px var(--color-buy-muted);
+.slide-btn--withdraw .slide-btn__label {
+  color: var(--color-sell);
 }
 
-.withdraw-submit {
-  background-color: var(--color-sell);
-  color: #fff;
+/* Chevron hint animation */
+.slide-btn__chevrons {
+  display: inline-flex;
+  gap: 0;
+  margin-left: var(--space-2);
+  animation: chevron-pulse 1.5s ease-in-out infinite;
 }
 
-.withdraw-submit:hover {
-  background-color: var(--color-sell-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px var(--color-sell-muted);
+.slide-btn__chevrons svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
 }
 
-.funds-submit:active {
-  transform: translateY(0);
-  box-shadow: none;
+.slide-btn__chevrons svg:nth-child(2) { opacity: 0.4; margin-left: -6px; }
+.slide-btn__chevrons svg:nth-child(3) { opacity: 0.2; margin-left: -6px; }
+
+@keyframes chevron-pulse {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(4px); opacity: 0.6; }
+}
+
+/* Draggable thumb */
+.slide-btn__thumb {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%) translateX(0);
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: grab;
+  transition: box-shadow var(--transition-fast), transform 0s;
+  will-change: transform;
+}
+
+.slide-btn__thumb:active {
+  cursor: grabbing;
+}
+
+.slide-btn__thumb.animate-back {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow var(--transition-fast);
+}
+
+.slide-btn--deposit .slide-btn__thumb {
+  background: var(--color-buy);
+  box-shadow: 0 2px 12px rgba(166, 227, 161, 0.4);
+}
+
+.slide-btn--deposit .slide-btn__thumb:hover {
+  box-shadow: 0 2px 18px rgba(166, 227, 161, 0.6);
+}
+
+.slide-btn--withdraw .slide-btn__thumb {
+  background: var(--color-sell);
+  box-shadow: 0 2px 12px rgba(243, 139, 168, 0.4);
+}
+
+.slide-btn--withdraw .slide-btn__thumb:hover {
+  box-shadow: 0 2px 18px rgba(243, 139, 168, 0.6);
+}
+
+.slide-btn__thumb svg {
+  width: 18px;
+  height: 18px;
+  color: var(--bg-primary);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Completed state — collapses to status icon */
+.slide-btn.is-completed .slide-btn__thumb,
+.slide-btn.is-completed .slide-btn__label,
+.slide-btn.is-completed .slide-btn__fill {
+  display: none;
+}
+
+.slide-btn__status {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  color: var(--bg-primary);
+  animation: status-fade-in 0.3s ease;
+}
+
+.slide-btn.is-completed .slide-btn__status {
+  display: flex;
+}
+
+.slide-btn--deposit .slide-btn__status { background: var(--color-buy); }
+.slide-btn--withdraw .slide-btn__status { background: var(--color-sell); }
+
+.slide-btn__status svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.slide-btn__status .spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes status-fade-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .funds-fine-print {

@@ -124,9 +124,24 @@ templ WalletContent(balance, LockedAmount int64, csrfToken string){
                         <button type="button" class="funds-chip" onclick="setAmount('depositAmount', 500)">$500</button>
                         <button type="button" class="funds-chip" onclick="setAmount('depositAmount', 1000)">$1k</button>
                     </div>
-                    <button type="submit" class="funds-submit deposit-submit">
-                        Deposit Funds
-                    </button>
+                    <div class="slide-btn slide-btn--deposit" data-slide-btn data-form="deposit">
+                        <div class="slide-btn__track"></div>
+                        <div class="slide-btn__fill"></div>
+                        <div class="slide-btn__label">
+                            Slide to Deposit
+                            <span class="slide-btn__chevrons">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="slide-btn__thumb">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </div>
+                        <div class="slide-btn__status">
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                        </div>
+                    </div>
                     <p class="funds-fine-print">Minimum deposit: $1.00</p>
                 </form>
             </div>
@@ -166,9 +181,24 @@ templ WalletContent(balance, LockedAmount int64, csrfToken string){
                         <button type="button" class="funds-chip" onclick="setPercent(75)">75%</button>
                         <button type="button" class="funds-chip funds-chip-max" onclick="setPercent(100)">Max</button>
                     </div>
-                    <button type="submit" class="funds-submit withdraw-submit">
-                        Withdraw Funds
-                    </button>
+                    <div class="slide-btn slide-btn--withdraw" data-slide-btn data-form="withdraw">
+                        <div class="slide-btn__track"></div>
+                        <div class="slide-btn__fill"></div>
+                        <div class="slide-btn__label">
+                            Slide to Withdraw
+                            <span class="slide-btn__chevrons">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="slide-btn__thumb">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </div>
+                        <div class="slide-btn__status">
+                            <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                        </div>
+                    </div>
                     <p class="funds-fine-print">Minimum withdrawal: $1.00</p>
                 </form>
             </div>
@@ -196,6 +226,98 @@ templ WalletContent(balance, LockedAmount int64, csrfToken string){
                 var amt = (num * pct / 100);
                 document.getElementById('withdrawAmount').value = amt.toFixed(2);
             }
+
+            // Slide-to-confirm buttons
+            (function() {
+                var THRESHOLD = 0.88;
+
+                document.querySelectorAll('[data-slide-btn]').forEach(function(btn) {
+                    var thumb = btn.querySelector('.slide-btn__thumb');
+                    var fill  = btn.querySelector('.slide-btn__fill');
+                    var form  = btn.closest('form');
+                    var dragging = false;
+                    var startX = 0;
+                    var currentX = 0;
+                    var maxDrag = 0;
+                    var completed = false;
+
+                    function getMaxDrag() {
+                        return btn.offsetWidth - thumb.offsetWidth - 6;
+                    }
+
+                    function setPosition(x) {
+                        thumb.style.transform = 'translateY(-50%) translateX(' + x + 'px)';
+                        fill.style.width = (x + thumb.offsetWidth / 2) + 'px';
+                    }
+
+                    function springBack() {
+                        thumb.classList.add('animate-back');
+                        fill.classList.add('animate-back');
+                        setPosition(0);
+                        setTimeout(function() {
+                            thumb.classList.remove('animate-back');
+                            fill.classList.remove('animate-back');
+                        }, 450);
+                    }
+
+                    function onStart(clientX) {
+                        if (completed) return;
+                        dragging = true;
+                        startX = clientX;
+                        maxDrag = getMaxDrag();
+                        thumb.classList.remove('animate-back');
+                        fill.classList.remove('animate-back');
+                        fill.style.transition = 'none';
+                    }
+
+                    function onMove(clientX) {
+                        if (!dragging || completed) return;
+                        var dx = clientX - startX;
+                        currentX = Math.max(0, Math.min(dx, maxDrag));
+                        setPosition(currentX);
+                    }
+
+                    function onEnd() {
+                        if (!dragging || completed) return;
+                        dragging = false;
+                        var progress = maxDrag > 0 ? currentX / maxDrag : 0;
+
+                        if (progress >= THRESHOLD) {
+                            completed = true;
+                            setPosition(maxDrag);
+                            btn.classList.add('is-completed');
+                            // Submit the form
+                            if (form) form.submit();
+                        } else {
+                            currentX = 0;
+                            springBack();
+                        }
+                    }
+
+                    // Mouse events
+                    thumb.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        onStart(e.clientX);
+                    });
+                    window.addEventListener('mousemove', function(e) {
+                        onMove(e.clientX);
+                    });
+                    window.addEventListener('mouseup', function() {
+                        onEnd();
+                    });
+
+                    // Touch events
+                    thumb.addEventListener('touchstart', function(e) {
+                        onStart(e.touches[0].clientX);
+                    }, { passive: true });
+                    window.addEventListener('touchmove', function(e) {
+                        onMove(e.touches[0].clientX);
+                    }, { passive: true });
+                    window.addEventListener('touchend', function() {
+                        onEnd();
+                    });
+                });
+            })();
         </script>
 
         <!-- Portfolio summary section -->
