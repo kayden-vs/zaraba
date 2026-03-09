@@ -182,7 +182,11 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 // ----- AUTH END -------
 
-func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
+	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
+		return pages.LandingPage(flash, isAuthenticated, csrfToken)
+	})
+}
 
 func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
 	symbolListProps, err := app.fetchCoinMarket()
