@@ -73,6 +73,51 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
                     }, 300);
                 }, 5000);
             }
+
+            // Avatar color initialization
+            document.querySelectorAll('.avatar[data-color]').forEach(function(el) {
+                el.style.backgroundColor = el.dataset.color;
+            });
+
+            // Profile popover toggle
+            var popoverWrap = document.querySelector('.profile-popover-wrap');
+            if (popoverWrap) {
+                var trigger = popoverWrap.querySelector('.avatar-trigger');
+                var popover = popoverWrap.querySelector('.popover');
+                var backdrop = document.getElementById('popover-backdrop');
+
+                function openPopover() {
+                    popover.classList.add('is-open');
+                    if (backdrop) backdrop.classList.add('is-open');
+                }
+                function closePopover() {
+                    popover.classList.remove('is-open');
+                    if (backdrop) backdrop.classList.remove('is-open');
+                }
+
+                trigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (popover.classList.contains('is-open')) {
+                        closePopover();
+                    } else {
+                        openPopover();
+                    }
+                });
+
+                if (backdrop) {
+                    backdrop.addEventListener('click', closePopover);
+                }
+
+                document.addEventListener('click', function(e) {
+                    if (!popoverWrap.contains(e.target)) {
+                        closePopover();
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') closePopover();
+                });
+            }
         })();
         </script>
     </body>

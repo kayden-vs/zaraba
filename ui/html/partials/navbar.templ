@@ -21,15 +21,37 @@ templ NavBar(isAuthenticated bool, csrfToken string){
             <!-- Right: Action Buttons -->
             <div class="header-actions">
                 if isAuthenticated {
-                    <div class="magnetic-wrap">
-                        <a href="/account/view" class="btn btn-ghost btn-sm header-actions--desktop">Account</a>
-                    </div>
-                    <span class="header-divider header-actions--desktop"></span>
-                    <div class="magnetic-wrap">
-                        <form action="/user/logout" method="POST" class="header-logout-form">
-                            <input type="hidden" name="csrf_token" value={ csrfToken }/>
-                            <button type="submit" class="btn btn-outline btn-sm">Logout</button>
-                        </form>
+                    <div class="profile-popover-wrap header-actions--desktop">
+                        <button class="avatar-trigger" aria-label="Profile menu">
+                            <span class="avatar avatar--sm" data-color={ GetAvatarColor(ctx) }>
+                                { GetInitials(ctx) }
+                            </span>
+                        </button>
+                        <div class="popover popover--profile">
+                            <div class="popover-header">
+                                <div class="popover-header-row">
+                                    <span class="avatar avatar--md" data-color={ GetAvatarColor(ctx) }>
+                                        { GetInitials(ctx) }
+                                    </span>
+                                    <div class="popover-header-info">
+                                        <p class="popover-title">{ GetUserName(ctx) }</p>
+                                        <p class="popover-description">{ GetUserEmail(ctx) }</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="popover-body">
+                                <a href="/user/wallet" class="popover-link">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2.5"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+                                    <span>Wallet</span>
+                                </a>
+                            </div>
+                            <div class="popover-footer">
+                                <form action="/user/logout" method="POST" class="header-logout-form">
+                                    <input type="hidden" name="csrf_token" value={ csrfToken }/>
+                                    <button type="submit" class="btn btn-outline btn-sm btn-block">Sign Out</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 } else {
                     <div class="magnetic-wrap">
@@ -51,6 +73,18 @@ templ NavBar(isAuthenticated bool, csrfToken string){
         <!-- Mobile Menu Dropdown -->
         <div class="header-mobile-menu">
             <div class="header-mobile-menu-inner">
+                if isAuthenticated {
+                    <div class="mobile-profile-header">
+                        <span class="avatar avatar--md" data-color={ GetAvatarColor(ctx) }>
+                            { GetInitials(ctx) }
+                        </span>
+                        <div>
+                            <p class="mobile-profile-name">{ GetUserName(ctx) }</p>
+                            <p class="mobile-profile-email">{ GetUserEmail(ctx) }</p>
+                        </div>
+                    </div>
+                    <div class="mobile-nav-divider"></div>
+                }
                 <a href="/markets" class="mobile-nav-link">
                     <span>Markets</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -64,14 +98,10 @@ templ NavBar(isAuthenticated bool, csrfToken string){
                         <span>Wallet</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </a>
-                    <a href="/account/view" class="mobile-nav-link">
-                        <span>Account</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </a>
                     <div class="mobile-menu-actions">
                         <form action="/user/logout" method="POST">
                             <input type="hidden" name="csrf_token" value={ csrfToken }/>
-                            <button type="submit" class="btn btn-outline btn-block">Logout</button>
+                            <button type="submit" class="btn btn-outline btn-block">Sign Out</button>
                         </form>
                     </div>
                 } else {
@@ -83,4 +113,7 @@ templ NavBar(isAuthenticated bool, csrfToken string){
             </div>
         </div>
     </header>
+    if isAuthenticated {
+        <div class="popover-backdrop" id="popover-backdrop"></div>
+    }
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/go-playground/form"
 	"github.com/justinas/nosurf"
 	"github.com/kayden-vs/zaraba/ui/html/pages"
+	"github.com/kayden-vs/zaraba/ui/html/partials"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -40,7 +41,20 @@ func (app *application) RenderPage(
 	flash := app.sessionManager.PopString(r.Context(), "flash")
 	isAuth := app.isAuthenticated(r)
 	csrfToken := nosurf.Token(r)
-	err := renderFunc(flash, isAuth, csrfToken).Render(r.Context(), w)
+
+	ctx := r.Context()
+	if isAuth {
+		userID, _ := ctx.Value(authenticatedUserIDKey).(int)
+		if userID > 0 {
+			user, err := app.users.GetUserInfo(userID)
+			if err == nil {
+				ctx = context.WithValue(ctx, partials.UserNameKey, user.Name)
+				ctx = context.WithValue(ctx, partials.UserEmailKey, user.Email)
+			}
+		}
+	}
+
+	err := renderFunc(flash, isAuth, csrfToken).Render(ctx, w)
 	if err != nil {
 		// client navigated away mid-render — not a real error
 		if errors.Is(err, context.Canceled) {
