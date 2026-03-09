@@ -57,7 +57,7 @@ func (app *application) routes() http.Handler {
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		app.notFound(w)
+		app.notFound(w, r)
 	})
 
 	return r

@@ -27,8 +27,13 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (app *application) notFound(w http.ResponseWriter) {
-	app.clientError(w, http.StatusNotFound)
+func (app *application) notFound(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusNotFound)
+	err := pages.NotFoundPage("", false, "").Render(r.Context(), w)
+	if err != nil {
+		app.errorLog.Println(err.Error())
+	}
 }
 
 // RenderPage injects flash and isAuthenticated into the page component.
