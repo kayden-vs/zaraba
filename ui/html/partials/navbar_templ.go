@@ -29,7 +29,7 @@ func NavBar(isAuthenticated bool, csrfToken string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"site-header\"><div class=\"header-container\"><!-- Left: Brand + Navigation Links --><div class=\"header-left\"><a href=\"/markets\" class=\"header-brand-link\"><span class=\"header-brand-mark\"></span> <span>Zaraba</span></a><nav class=\"header-nav header-nav--desktop\"><a href=\"/markets\" class=\"header-nav-link\">Markets</a> <a href=\"/trade/bitcoin\" class=\"header-nav-link\">Trade</a> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"site-header\"><div class=\"header-container\"><!-- Left: Brand + Navigation Links --><div class=\"header-left\"><a href=\"/markets\" class=\"header-brand-link\"><img src=\"/static/images/logo.png\" alt=\"Zaraba\" class=\"header-brand-logo\"> <span>Zaraba</span></a><nav class=\"header-nav header-nav--desktop\"><a href=\"/markets\" class=\"header-nav-link\">Markets</a> <a href=\"/trade/bitcoin\" class=\"header-nav-link\">Trade</a> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

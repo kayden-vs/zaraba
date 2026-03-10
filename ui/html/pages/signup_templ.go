@@ -67,14 +67,14 @@ func Signup(props SignupFormParams) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"auth-container\"><div class=\"auth-wrapper\"><!-- Left: Visual/Branding Side --><div class=\"auth-visual\"><div class=\"auth-ripple\"><span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span></div><div class=\"auth-orbit\"><div class=\"orbit-ring orbit-ring-1\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"></polyline><polyline points=\"16 7 22 7 22 13\"></polyline></svg></span></div><div class=\"orbit-ring orbit-ring-2\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"></rect><path d=\"M12 4v16\"></path><path d=\"M2 12h20\"></path></svg></span></div><div class=\"orbit-ring orbit-ring-3\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"></path></svg></span></div><div class=\"orbit-ring orbit-ring-1 orbit-reverse\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12V7H5a2 2 0 0 1 0-4h14v4\"></path><path d=\"M3 5v14a2 2 0 0 0 2 2h16v-5\"></path><path d=\"M18 12a2 2 0 0 0 0 4h4v-4Z\"></path></svg></span></div></div><div class=\"auth-visual-text\"><span class=\"auth-brand-text\">Zaraba</span></div></div><!-- Right: Form Side --><div class=\"auth-form-section\"><div class=\"auth-form-header\"><div class=\"box-reveal\"><h1>Create account</h1></div><div class=\"box-reveal box-reveal-delay-1\"><p>Start trading on a professional exchange</p></div></div><form action=\"/user/signup\" method=\"POST\" novalidate class=\"auth-form\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"auth-container\"><div class=\"auth-wrapper\"><!-- Left: Visual/Branding Side --><div class=\"auth-visual\"><div class=\"auth-ripple\"><span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span> <span class=\"ripple-circle\"></span></div><div class=\"auth-orbit\"><div class=\"orbit-ring orbit-ring-1\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"></polyline><polyline points=\"16 7 22 7 22 13\"></polyline></svg></span></div><div class=\"orbit-ring orbit-ring-2\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"></rect><path d=\"M12 4v16\"></path><path d=\"M2 12h20\"></path></svg></span></div><div class=\"orbit-ring orbit-ring-3\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"></path></svg></span></div><div class=\"orbit-ring orbit-ring-1 orbit-reverse\"><span class=\"orbit-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12V7H5a2 2 0 0 1 0-4h14v4\"></path><path d=\"M3 5v14a2 2 0 0 0 2 2h16v-5\"></path><path d=\"M18 12a2 2 0 0 0 0 4h4v-4Z\"></path></svg></span></div></div><div class=\"auth-visual-text\"><img src=\"/static/images/logo.png\" alt=\"Zaraba\" class=\"auth-brand-logo\"> <span class=\"auth-brand-text\">Zaraba</span></div></div><!-- Right: Form Side --><div class=\"auth-form-section\"><div class=\"auth-form-header\"><div class=\"box-reveal\"><h1>Create account</h1></div><div class=\"box-reveal box-reveal-delay-1\"><p>Start trading on a professional exchange</p></div></div><form action=\"/user/signup\" method=\"POST\" novalidate class=\"auth-form\"><input type=\"hidden\" name=\"csrf_token\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.CSRFToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 69, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 70, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -87,7 +87,7 @@ func Signup(props SignupFormParams) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(props.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 75, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 76, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -105,7 +105,7 @@ func Signup(props SignupFormParams) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.FieldErrors["name"])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 78, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 79, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -123,7 +123,7 @@ func Signup(props SignupFormParams) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(props.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 87, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 88, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -141,7 +141,7 @@ func Signup(props SignupFormParams) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(props.FieldErrors["email"])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 90, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 91, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -164,7 +164,7 @@ func Signup(props SignupFormParams) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(props.FieldErrors["password"])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 102, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/html/pages/signup.templ`, Line: 103, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
