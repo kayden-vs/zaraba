@@ -8,7 +8,7 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
     <head>
         <meta charset='utf-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <meta name='theme-color' content='#11111b'>
+        <meta name='theme-color' content='#0A0D12'>
         <title>{ title } - Zaraba</title>
         <link rel='icon' type='image/png' href='/static/images/logo.png'>
         <link rel='preconnect' href='https://fonts.googleapis.com'>
@@ -25,11 +25,11 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
                 <svg class="loader-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="loader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#89dceb"/>
-                            <stop offset="100%" stop-color="#cba6f7"/>
+                            <stop offset="0%" stop-color="#60A5FA"/>
+                            <stop offset="100%" stop-color="#3B82F6"/>
                         </linearGradient>
                     </defs>
-                    <path class="loader-logo__base" d="M 12 20 L 68 20 L 12 60 L 68 60" stroke="rgba(203,166,247,0.1)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path class="loader-logo__base" d="M 12 20 L 68 20 L 12 60 L 68 60" stroke="rgba(59,130,246,0.1)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path class="loader-logo__z" d="M 12 20 L 68 20 L 12 60 L 68 60" stroke="url(#loader-grad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <div class="loader-glow"></div>

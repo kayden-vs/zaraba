@@ -57,11 +57,11 @@
   var AUTO_SPEED = 0.002;
   var FOV = 600;
 
-  /* Color config - Catppuccin accents */
-  var DOT_COLOR_BASE = [137, 180, 250]; /* accent-secondary blue */
-  var ARC_COLOR = "rgba(203, 166, 247, 0.45)"; /* mauve */
-  var MARKER_COLOR = "rgba(137, 220, 235, 1)"; /* sky */
-  var MARKER_COLOR_DIM = "rgba(137, 220, 235, 0.X)";
+  /* Color config - Exchange accents */
+  var DOT_COLOR_BASE = [96, 165, 250]; /* accent blue-400 */
+  var ARC_COLOR = "rgba(59, 130, 246, 0.45)"; /* primary blue */
+  var MARKER_COLOR = "rgba(96, 165, 250, 1)"; /* blue-400 */
+  var MARKER_COLOR_DIM = "rgba(96, 165, 250, 0.X)";
 
   function latLngToXYZ(lat, lng, r) {
     var p = ((90 - lat) * Math.PI) / 180;
@@ -107,15 +107,15 @@
 
     /* Outer glow */
     var glow = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.5);
-    glow.addColorStop(0, "rgba(203, 166, 247, 0.03)");
-    glow.addColorStop(1, "rgba(203, 166, 247, 0)");
+    glow.addColorStop(0, "rgba(59, 130, 246, 0.03)");
+    glow.addColorStop(1, "rgba(59, 130, 246, 0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
 
     /* Globe outline */
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(137, 180, 250, 0.06)";
+    ctx.strokeStyle = "rgba(96, 165, 250, 0.06)";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -208,7 +208,7 @@
       /* Label */
       if (mk.label) {
         ctx.font = "10px 'Montserrat', system-ui, sans-serif";
-        ctx.fillStyle = "rgba(137, 220, 235, 0.6)";
+        ctx.fillStyle = "rgba(96, 165, 250, 0.6)";
         ctx.fillText(mk.label, ms[0] + 8, ms[1] + 3);
       }
     }

@@ -17,7 +17,7 @@
   var DENSITY = parseInt(container.dataset.density || "5", 10);
   var DISPERSION = parseFloat(container.dataset.dispersion || "18");
   var RETURN_SPEED = parseFloat(container.dataset.returnSpeed || "0.08");
-  var COLOR = container.dataset.color || "#cba6f7"; /* Catppuccin mauve */
+  var COLOR = container.dataset.color || "#3B82F6"; /* Exchange accent blue */
 
   var particles = [];
   var mouseX = -1000,

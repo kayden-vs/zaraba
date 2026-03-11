@@ -7,7 +7,7 @@
   /* ------------------------------------------------------------------
      HERO WEBGL TERRAIN BACKGROUND
      Perlin-noise displaced plane rendered with raw WebGL.
-     Catppuccin Mocha mauve (#cba6f7) on transparent bg.
+     Exchange accent blue (#3B82F6) on transparent bg.
      ------------------------------------------------------------------ */
   var canvas = document.getElementById("hero-canvas");
   if (canvas) {
@@ -107,7 +107,7 @@
         "varying vec3 vPosition;",
         "void main(void){",
         "  float d=(96.0-length(vPosition))/256.0*0.7;",
-        "  gl_FragColor=vec4(0.796,0.651,0.969,d);",  /* Catppuccin mauve */
+        "  gl_FragColor=vec4(0.231,0.510,0.965,d);",  /* Exchange blue */
         "}"
       ].join("\n");
 
