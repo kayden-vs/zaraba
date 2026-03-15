@@ -2,3 +2,4 @@ mydocs/
 .env
 bin/
 *.excalidraw
+.github/
