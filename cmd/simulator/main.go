@@ -56,7 +56,8 @@ type coinGeckoMarket struct {
 	CurrentPrice float64 `json:"current_price"`
 }
 
-var csrfTokenRegex = regexp.MustCompile(`name=["']csrf_token["']\s+value=["']([^"']+)["']`)
+var csrfInputRegex = regexp.MustCompile(`(?i)<input[^>]*name=["']csrf_token["'][^>]*>`)
+var inputValueRegex = regexp.MustCompile(`(?i)value=["']([^"']+)["']`)
 
 func main() {
 	loadDotEnvFile(".env")
@@ -455,7 +456,12 @@ func (s *simulator) fetchCSRFToken(ctx context.Context, path string) (string, er
 		return "", err
 	}
 
-	matches := csrfTokenRegex.FindStringSubmatch(string(body))
+	input := csrfInputRegex.FindString(string(body))
+	if input == "" {
+		return "", nil
+	}
+
+	matches := inputValueRegex.FindStringSubmatch(input)
 	if len(matches) < 2 {
 		return "", nil
 	}
@@ -472,6 +478,11 @@ func (s *simulator) postForm(ctx context.Context, path string, form url.Values) 
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json, text/html;q=0.9")
+	req.Header.Set("Referer", endpoint)
+
+	if u, err := url.Parse(endpoint); err == nil && u.Scheme != "" && u.Host != "" {
+		req.Header.Set("Origin", u.Scheme+"://"+u.Host)
+	}
 
 	return s.client.Do(req)
 }
