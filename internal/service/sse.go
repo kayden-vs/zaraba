@@ -22,12 +22,35 @@ type Broker struct {
 	mu      sync.Mutex
 }
 
+const (
+	MaxOrderBookLevels = 20
+	MaxRecentTrades    = 100
+)
+
+type TradeTick struct {
+	Price     int64  `json:"price"`
+	Size      int64  `json:"size"`
+	Side      string `json:"side"`
+	Timestamp int64  `json:"timestamp"`
+}
+
 var PriceBroker = &Broker{
 	clients: make(map[chan []byte]bool),
 }
 
 var OrderbookBroker = &Broker{
 	clients: make(map[chan []byte]bool),
+}
+
+var TradeBroker = &Broker{
+	clients: make(map[chan []byte]bool),
+}
+
+var tradeStore = struct {
+	mu     sync.RWMutex
+	trades []TradeTick
+}{
+	trades: make([]TradeTick, 0, MaxRecentTrades),
 }
 
 func (b *Broker) AddClient() chan []byte {
@@ -117,6 +140,8 @@ func BroadcastOrderBook(server *ExchangeServer) {
 		return
 	}
 
+	snapshot = trimSnapshot(snapshot, MaxOrderBookLevels)
+
 	jsonData, err := json.Marshal(snapshot)
 	if err != nil {
 		log.Println("Error marshaling snapshot:", err)
@@ -124,4 +149,56 @@ func BroadcastOrderBook(server *ExchangeServer) {
 	}
 
 	OrderbookBroker.Broadcast(jsonData)
+}
+
+func BroadcastTrade(tick TradeTick) {
+	tradeStore.mu.Lock()
+	tradeStore.trades = append([]TradeTick{tick}, tradeStore.trades...)
+	if len(tradeStore.trades) > MaxRecentTrades {
+		tradeStore.trades = tradeStore.trades[:MaxRecentTrades]
+	}
+	tradeStore.mu.Unlock()
+
+	jsonData, err := json.Marshal(tick)
+	if err != nil {
+		log.Println("Error marshaling trade:", err)
+		return
+	}
+
+	TradeBroker.Broadcast(jsonData)
+}
+
+func RecentTradesPayload() []byte {
+	tradeStore.mu.RLock()
+	defer tradeStore.mu.RUnlock()
+
+	jsonData, err := json.Marshal(tradeStore.trades)
+	if err != nil {
+		return []byte("[]")
+	}
+
+	return jsonData
+}
+
+func trimSnapshot(snapshot *pb.OrderbookSnapshot, depth int) *pb.OrderbookSnapshot {
+	if snapshot == nil || depth <= 0 {
+		return snapshot
+	}
+
+	trimmed := &pb.OrderbookSnapshot{Timestamp: snapshot.Timestamp}
+
+	askDepth := min(depth, len(snapshot.Asks))
+	bidDepth := min(depth, len(snapshot.Bids))
+
+	trimmed.Asks = snapshot.Asks[:askDepth]
+	trimmed.Bids = snapshot.Bids[:bidDepth]
+
+	return trimmed
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

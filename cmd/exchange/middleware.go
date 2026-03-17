@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/justinas/nosurf"
@@ -41,11 +42,16 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 }
 
 func noSurf(next http.Handler) http.Handler {
+	if strings.EqualFold(os.Getenv("DISABLE_CSRF"), "true") {
+		return next
+	}
+
 	csrfHandler := nosurf.New(next)
+	secureCookie := strings.EqualFold(os.Getenv("CSRF_SECURE_COOKIE"), "true")
 	csrfHandler.SetBaseCookie(http.Cookie{
 		HttpOnly: true,
 		Path:     "/",
-		Secure:   true,
+		Secure:   secureCookie,
 	})
 
 	return csrfHandler

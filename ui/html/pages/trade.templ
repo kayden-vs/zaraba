@@ -6,10 +6,10 @@ import "fmt"
 import "github.com/kayden-vs/zaraba/internal/engine"
 
 templ TradePage(symbol CoinMarketProps ,tvSymbol string ,walletBalance int64, flash string, isAuthenticated bool, csrfToken string) {
-    @html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol, tvSymbol, walletBalance))
+    @html.Base(symbol.Name, flash, isAuthenticated, csrfToken, TradePageBody(symbol, tvSymbol, walletBalance, csrfToken))
 }
 
-templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64) {
+templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64, csrfToken string) {
     <div class="trade-layout">
         <!-- Trade Header with Market Info -->
         <div class="heading">
@@ -102,7 +102,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                     <span>Size</span>
                     <span>Time</span>
                 </div>
-                <div class="trades-list">
+                <div class="trades-list" id="trades-list">
                     <div class="trade-row">
                         <span class="price">--</span>
                         <span class="size">--</span>
@@ -121,7 +121,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 </div>
             </div>
 
-            <div class="trade-panel-body">
+            <form class="trade-panel-body" id="trade-order-form" method="POST" action={ "/trade/" + symbol.ID + "/placelimitorder" }>
                 <!-- Order Type Selection -->
                 <div class="order-type-selector">
                     <label class="radio-option">
@@ -144,7 +144,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 <div class="input-group limit-only">
                     <label for="price">Price</label>
                     <div class="input-wrapper">
-                        <input type="number" id="price" placeholder="0.00" step="0.01"/>
+                        <input type="number" id="price" name="price" placeholder="0.00" step="0.01"/>
                         <span class="input-suffix">USDT</span>
                     </div>
                 </div>
@@ -153,7 +153,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 <div class="input-group">
                     <label for="amount">Amount</label>
                     <div class="input-wrapper">
-                        <input type="number" id="amount" placeholder="0.00" step="0.00000001"/>
+                        <input type="number" id="amount" name="size" placeholder="0.00" step="0.00000001"/>
                         <span class="input-suffix">{ strings.ToUpper(symbol.Name) }</span>
                     </div>
                 </div>
@@ -173,16 +173,21 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 </div>
 
                 <!-- Action Button -->
-                if walletBalance == 0 {
-                    <a href="/user/wallet" class="action-btn add-funds-btn">
-                        Add Funds to Trade
-                    </a>
-                } else {
-                    <button class="action-btn buy-btn" id="place-order-btn" type="button">
-                        Buy { strings.ToUpper(symbol.Name) }
-                    </button>
-                }
-            </div>
+                <div class="trade-panel-actions">
+                    if walletBalance == 0 {
+                        <a href="/user/wallet" class="action-btn add-funds-btn">
+                            Add Funds to Trade
+                        </a>
+                    } else {
+                        <input type="hidden" id="trade-csrf-token" value={ csrfToken }/>
+                        <input type="hidden" name="csrf_token" value={ csrfToken }/>
+                        <input type="hidden" name="side" id="trade-side" value="buy"/>
+                        <button class="action-btn buy-btn" id="place-order-btn" type="submit">
+                            Buy { strings.ToUpper(symbol.Name) }
+                        </button>
+                    }
+                </div>
+            </form>
 
             <!-- Trade History Link -->
             <a href="/orders" class="trade-history-link">
@@ -199,6 +204,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
             // Precision constants matching Go engine
             const PRICE_SCALE = 1_000_000;       // 1 USDT = 1,000,000 micro-USDT
             const QUANTITY_SCALE = 100_000_000;   // 1 unit = 100,000,000 base units
+            const MAX_OB_LEVELS = 5;
 
             function formatPrice(microUsdt) {
                 return (microUsdt / PRICE_SCALE).toFixed(2);
@@ -246,8 +252,8 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 asksContainer.innerHTML = '';
                 bidsContainer.innerHTML = '';
 
-                const asks = snapshot.asks || [];
-                const bids = snapshot.bids || [];
+                const asks = (snapshot.asks || []).slice(0, MAX_OB_LEVELS);
+                const bids = (snapshot.bids || []).slice(0, MAX_OB_LEVELS);
 
                 // Asks: lowest price at bottom (closest to spread)
                 // Reverse so lowest is last (visually closest to spread)
@@ -294,16 +300,115 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
     </script>
 
     <!-- ==================== -->
+    <!-- SSE: Recent Trades   -->
+    <!-- ==================== -->
+    <script>
+        (function() {
+            const PRICE_SCALE = 1_000_000;
+            const QUANTITY_SCALE = 100_000_000;
+            const tradesList = document.getElementById('trades-list');
+            const maxRows = 8;
+
+            if (!tradesList) {
+                return;
+            }
+
+            function formatPrice(microUsdt) {
+                return (microUsdt / PRICE_SCALE).toFixed(2);
+            }
+
+            function formatQuantity(baseUnits) {
+                return (baseUnits / QUANTITY_SCALE).toFixed(4);
+            }
+
+            function formatTradeTime(ts) {
+                const d = new Date(ts || Date.now());
+                return d.toLocaleTimeString([], { hour12: false });
+            }
+
+            function createTradeRow(trade) {
+                const row = document.createElement('div');
+                row.className = 'trade-row';
+
+                const price = document.createElement('span');
+                price.className = 'price ' + (trade.side === 'buy' ? 'positive' : 'negative');
+                price.textContent = formatPrice(trade.price);
+
+                const size = document.createElement('span');
+                size.className = 'size';
+                size.textContent = formatQuantity(trade.size);
+
+                const time = document.createElement('span');
+                time.className = 'time';
+                time.textContent = formatTradeTime(trade.timestamp);
+
+                row.appendChild(price);
+                row.appendChild(size);
+                row.appendChild(time);
+
+                return row;
+            }
+
+            function renderTradeSnapshot(trades) {
+                tradesList.innerHTML = '';
+
+                if (!Array.isArray(trades) || trades.length === 0) {
+                    tradesList.innerHTML = '<div class="trade-row"><span class="price">--</span><span class="size">--</span><span class="time">--</span></div>';
+                    return;
+                }
+
+                const capped = trades.slice(0, maxRows);
+                capped.forEach(function(trade) {
+                    tradesList.appendChild(createTradeRow(trade));
+                });
+            }
+
+            function prependTrade(trade) {
+                const hasPlaceholder = tradesList.querySelector('.trade-row .price') && tradesList.textContent.indexOf('--') !== -1;
+                if (hasPlaceholder) {
+                    tradesList.innerHTML = '';
+                }
+
+                tradesList.prepend(createTradeRow(trade));
+
+                while (tradesList.children.length > maxRows) {
+                    tradesList.removeChild(tradesList.lastElementChild);
+                }
+            }
+
+            const es = new EventSource('/sse/trades');
+            es.onmessage = function(event) {
+                const payload = JSON.parse(event.data);
+                if (Array.isArray(payload)) {
+                    renderTradeSnapshot(payload);
+                } else if (payload && payload.price && payload.size) {
+                    prependTrade(payload);
+                }
+            };
+        })();
+    </script>
+
+    <!-- ==================== -->
     <!-- Trade Panel Logic     -->
     <!-- ==================== -->
     <script>
         // Trade Panel Interactivity
         (function() {
-            document.addEventListener('DOMContentLoaded', function() {
+            let initialized = false;
+
+            function initTradePanel() {
+                if (initialized) {
+                    return;
+                }
+                initialized = true;
+
                 // Data from Go template
-                const availableMargin = {{ fmt.Sprintf("%.2f", float64(walletBalance)/100) }};
+                const availableMargin = {{ fmt.Sprintf("%.2f", float64(walletBalance)/1000000) }};
                 const currentPrice = {{ fmt.Sprintf("%.2f", symbol.Price) }};
                 const symbolName = '{{ strings.ToUpper(symbol.Name) }}';
+                const symbolID = '{{ symbol.ID }}';
+                const orderForm = document.getElementById('trade-order-form');
+                const sideInput = document.getElementById('trade-side');
 
                 const tradePanel = document.getElementById('trade-panel');
                 const buyBtn = document.querySelector('[data-side="buy"]');
@@ -331,6 +436,9 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                             placeOrderBtn.className = 'action-btn buy-btn';
                             placeOrderBtn.textContent = 'Buy ' + symbolName;
                         }
+                        if (sideInput) {
+                            sideInput.value = 'buy';
+                        }
                     });
                 }
 
@@ -345,6 +453,9 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                             placeOrderBtn.className = 'action-btn sell-btn';
                             placeOrderBtn.textContent = 'Sell ' + symbolName;
                         }
+                        if (sideInput) {
+                            sideInput.value = 'sell';
+                        }
                     });
                 }
 
@@ -354,8 +465,14 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                         currentOrderType = this.value;
                         if (currentOrderType === 'market') {
                             limitOnlyGroup.style.display = 'none';
+                            if (orderForm) {
+                                orderForm.action = '/trade/' + symbolID + '/placemarketorder';
+                            }
                         } else {
                             limitOnlyGroup.style.display = 'flex';
+                            if (orderForm) {
+                                orderForm.action = '/trade/' + symbolID + '/placelimitorder';
+                            }
                         }
                         calculateTotal();
                     });
@@ -388,6 +505,31 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                     }
                 }
 
+                if (orderForm) {
+                    orderForm.addEventListener('submit', function(event) {
+                        const amount = parseFloat(amountInput.value || '0');
+                        if (!Number.isFinite(amount) || amount <= 0) {
+                            event.preventDefault();
+                            alert('Enter a valid amount');
+                            return;
+                        }
+
+                        if (currentOrderType === 'limit') {
+                            const price = parseFloat(priceInput.value || '0');
+                            if (!Number.isFinite(price) || price <= 0) {
+                                event.preventDefault();
+                                alert('Enter a valid limit price');
+                                return;
+                            }
+                        }
+
+                        if (placeOrderBtn) {
+                            placeOrderBtn.disabled = true;
+                            placeOrderBtn.textContent = 'Placing...';
+                        }
+                    });
+                }
+
                 // Update total on input change
                 if (priceInput) {
                     priceInput.addEventListener('input', function() {
@@ -410,6 +552,19 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 // Initialize buy mode
                 if (tradePanel) {
                     tradePanel.classList.add('buy-mode');
+                }
+
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initTradePanel);
+            } else {
+                initTradePanel();
+            }
+
+            window.addEventListener('pageshow', function() {
+                if (!initialized) {
+                    initTradePanel();
                 }
             });
         })();

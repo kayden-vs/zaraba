@@ -1180,7 +1180,7 @@ tbody tr.clickable {
   grid-template-columns: 1fr 320px 340px;
   grid-template-rows: auto 1fr;
   gap: var(--space-4);
-  min-height: calc(100vh - 140px);
+  min-height: calc(100vh - 100px);
 }
 
 /* Market header */
@@ -1290,7 +1290,7 @@ tbody tr.clickable {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  min-height: 500px;
+  min-height: 0;
 }
 
 .tradingview-widget-container__widget {
@@ -1307,6 +1307,7 @@ tbody tr.clickable {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  min-height: 0;
 }
 
 /* Orderbook */
@@ -1315,7 +1316,10 @@ tbody tr.clickable {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  flex: 1;
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .orderbook-header {
@@ -1403,13 +1407,37 @@ tbody tr.clickable {
   color: var(--text-secondary);
 }
 
+.orderbook-asks,
+.orderbook-bids {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.orderbook-asks::-webkit-scrollbar,
+.orderbook-bids::-webkit-scrollbar,
+.trades-list::-webkit-scrollbar,
+.trade-panel-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.orderbook-asks::-webkit-scrollbar-thumb,
+.orderbook-bids::-webkit-scrollbar-thumb,
+.trades-list::-webkit-scrollbar-thumb,
+.trade-panel-body::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 999px;
+}
+
 /* Recent trades */
 .recent-trades {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  max-height: 280px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .recent-trades-header {
@@ -1440,8 +1468,7 @@ tbody tr.clickable {
 }
 
 .trades-list {
-  max-height: 200px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .trade-row {
@@ -1510,7 +1537,35 @@ tbody tr.clickable {
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.trade-panel-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding-top: var(--space-3);
+  background: linear-gradient(to bottom, rgba(17, 22, 29, 0), var(--bg-secondary) 30%);
+  z-index: 2;
+}
+
+@media (min-width: 1201px) {
+  .market-data,
+  .trade-panel,
+  .tradingview-widget-container {
+    height: calc(100vh - 200px);
+    min-height: 640px;
+  }
+
+  .orderbook {
+    height: 420px;
+  }
+
+  .recent-trades {
+    min-height: 220px;
+  }
 }
 
 /* Order type selector - Limit/Market */
@@ -1676,7 +1731,7 @@ tbody tr.clickable {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-top: auto;
+  margin-top: 0;
 }
 
 .action-btn.buy-btn {
@@ -2885,12 +2940,14 @@ form:not(.auth-form):not(.header-logout-form) > div {
   .trade-panel {
     grid-column: 1;
     grid-row: 3;
+    height: auto;
   }
   
   .market-data {
     grid-column: 1;
     grid-row: 4;
     flex-direction: column;
+    height: auto;
   }
   
   .markets-header {

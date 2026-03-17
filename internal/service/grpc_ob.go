@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/kayden-vs/zaraba/internal/engine"
 	"github.com/kayden-vs/zaraba/pb"
@@ -34,6 +35,22 @@ func (s *ExchangeServer) PlaceMarketOrder(ctx context.Context, order *pb.Order) 
 	matches := s.orderbook.PlaceMarketOrder(engineOrder)
 
 	go BroadcastOrderBook(s)
+
+	takerSide := "sell"
+	if order.Bid {
+		takerSide = "buy"
+	}
+	for _, m := range matches {
+		if m.SizeFilled <= 0 {
+			continue
+		}
+		BroadcastTrade(TradeTick{
+			Price:     m.Price,
+			Size:      m.SizeFilled,
+			Side:      takerSide,
+			Timestamp: time.Now().UnixMilli(),
+		})
+	}
 
 	// Return the first match if any, or an empty match
 	if len(matches) > 0 {

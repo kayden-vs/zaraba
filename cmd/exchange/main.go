@@ -31,6 +31,7 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":8080", "HTTP server port")
+	grpcAddr := flag.String("grpc-addr", ":50051", "gRPC server port")
 	dsn := flag.String("dsn", "postgres://rohit:eren@/exchange?host=/var/run/postgresql&sslmode=disable", "PostgreSQL data source name")
 	flag.Parse()
 
@@ -68,9 +69,9 @@ func main() {
 	}
 
 	// Start gRPC server in a goroutine
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {
-		errorLog.Fatalf("failed to listen on port 50051: %v", err)
+		errorLog.Fatalf("failed to listen on gRPC address %s: %v", *grpcAddr, err)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -79,7 +80,7 @@ func main() {
 	pb.RegisterExchangeServer(grpcServer, exchangeServer)
 
 	go func() {
-		infoLog.Printf("Starting gRPC server on :50051")
+		infoLog.Printf("Starting gRPC server on %s", *grpcAddr)
 		if err := grpcServer.Serve(lis); err != nil {
 			errorLog.Fatalf("failed to serve gRPC: %v", err)
 		}

@@ -25,9 +25,11 @@ func (app *application) routes() http.Handler {
 	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
 	r.Get("/ping", ping)
+	r.Head("/ping", ping)
 
 	r.Get("/sse/markets", app.SseMarketHandler)
 	r.Get("/sse/orderbook", app.SseOrderBookHandler)
+	r.Get("/sse/trades", app.SseTradesHandler)
 
 	r.Group(func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)
