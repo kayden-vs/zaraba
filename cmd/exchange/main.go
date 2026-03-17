@@ -3,10 +3,12 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/scs/postgresstore"
@@ -35,6 +37,20 @@ func main() {
 	dsn := flag.String("dsn", "postgres://rohit:eren@/exchange?host=/var/run/postgresql&sslmode=disable", "PostgreSQL data source name")
 	flag.Parse()
 
+	appEnv := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	if appEnv == "" {
+		appEnv = "development"
+	}
+
+	if appEnv == "production" {
+		if strings.TrimSpace(os.Getenv("API_KEY")) == "" {
+			log.Fatal("missing required env var: API_KEY")
+		}
+		if strings.TrimSpace(*dsn) == "" {
+			log.Fatal("missing required database DSN")
+		}
+	}
+
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
@@ -49,6 +65,14 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = postgresstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.HttpOnly = true
+	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
+	sessionManager.Cookie.Secure = appEnv == "production"
+
+	infoLog.Printf("running in %s mode", appEnv)
+	if appEnv == "production" && !strings.EqualFold(os.Getenv("CSRF_SECURE_COOKIE"), "true") {
+		infoLog.Printf("warning: CSRF_SECURE_COOKIE is not true; set CSRF_SECURE_COOKIE=true in production")
+	}
 
 	app := &application{
 		errorLog:       errorLog,
@@ -60,11 +84,13 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:        *addr,
-		ErrorLog:    errorLog,
-		Handler:     app.routes(),
-		IdleTimeout: 1 * time.Minute,
-		ReadTimeout: 5 * time.Second,
+		Addr:              *addr,
+		ErrorLog:          errorLog,
+		Handler:           app.routes(),
+		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       1 * time.Minute,
+		ReadTimeout:       5 * time.Second,
+		MaxHeaderBytes:    1 << 20,
 		// WriteTimeout is intentionally omitted — SSE connections are long-lived
 	}
 
@@ -91,7 +117,9 @@ func main() {
 
 	infoLog.Printf("Starting HTTP server on %s", *addr)
 	err = srv.ListenAndServe()
-	errorLog.Fatal(err)
+	if err != nil && err != http.ErrServerClosed {
+		errorLog.Fatal(fmt.Errorf("http server error: %w", err))
+	}
 }
 
 func openDB(dsn string) (*sql.DB, error) {

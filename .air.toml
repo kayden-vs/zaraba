@@ -5,14 +5,14 @@ tmp_dir = "bin"
 [build]
   args_bin = []
   bin = "./bin/exchange"
-  cmd = "go build -o ./bin/exchange ./cmd/exchange"
+  cmd = "go build -o ./bin/exchange ./cmd/exchange && go build -o ./bin/simulator ./cmd/simulator"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = ""
+  full_bin = "sh -c 'set -e; if [ -f ./.env ]; then set -a; . ./.env; set +a; fi; export SIM_BASE_URL=${SIM_BASE_URL:-http://127.0.0.1:8080}; ./bin/exchange -addr :8080 -dsn \"${DATABASE_URL:-postgres://rohit:eren@/exchange?host=/var/run/postgresql&sslmode=disable}\" & app_pid=$!; if [ \"${START_SIMULATOR:-true}\" = \"true\" ]; then ( while true; do ./bin/simulator && exit 0; echo \"simulator not ready, retrying in 2s\"; sleep 2; done ) & sim_pid=$!; fi; trap \"kill $app_pid ${sim_pid:-} 2>/dev/null\" INT TERM; wait $app_pid'"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []

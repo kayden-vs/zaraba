@@ -3,14 +3,72 @@ services:
     name: zaraba
     runtime: go
     plan: free
-    buildCommand: go build -o bin/exchange github.com/kayden-vs/zaraba/cmd/exchange
-    startCommand: ./bin/exchange -addr :$PORT -dsn $DATABASE_URL
+    healthCheckPath: /ping
+    buildCommand: go build -o bin/exchange github.com/kayden-vs/zaraba/cmd/exchange && go build -o bin/simulator github.com/kayden-vs/zaraba/cmd/simulator
+    startCommand: >
+      /bin/sh -c 'set -e;
+      ./bin/exchange -addr :$PORT -dsn "$DATABASE_URL" &
+      app_pid=$!;
+      if [ "${START_SIMULATOR:-false}" = "true" ]; then
+        export SIM_BASE_URL="http://127.0.0.1:$PORT";
+        (
+          while true; do
+            ./bin/simulator && exit 0;
+            echo "simulator not ready, retrying in 2s";
+            sleep 2;
+          done
+        ) &
+        sim_pid=$!;
+      fi;
+      trap "kill $app_pid ${sim_pid:-} 2>/dev/null" INT TERM;
+      wait $app_pid;
+      status=$?;
+      if [ -n "${sim_pid:-}" ]; then
+        kill $sim_pid 2>/dev/null || true;
+      fi;
+      exit $status'
     envVars:
       - key: PORT
         value: "10000"
+      - key: APP_ENV
+        value: production
       - key: DATABASE_URL
         sync: false # set manually — Supabase connection string
       - key: API_KEY
         sync: false # CoinGecko API key
+      - key: CSRF_SECURE_COOKIE
+        value: "true"
+      - key: DISABLE_CSRF
+        value: "false"
+      - key: START_SIMULATOR
+        value: "true"
+      - key: SIM_EMAIL
+        sync: false # bot account email
+      - key: SIM_PASSWORD
+        sync: false # bot account password
+      - key: SIM_NAME
+        value: "Market Maker Bot"
+      - key: SIM_AUTO_SIGNUP
+        value: "true"
+      - key: SIM_DEPOSIT_USDT
+        value: "100000"
+      - key: SIM_SYMBOL
+        value: "bitcoin"
+      - key: SIM_COINGECKO_ID
+        value: "bitcoin"
+      - key: SIM_INTERVAL_MS
+        value: "1500"
+      - key: SIM_PRICE_REFRESH_MS
+        value: "15000"
+      - key: SIM_LAYERS
+        value: "3"
+      - key: SIM_SPREAD_BPS
+        value: "15"
+      - key: SIM_BASE_SIZE
+        value: "0.0008"
+      - key: SIM_MARKET_EVERY
+        value: "15"
+      - key: SIM_MARKET_SIZE
+        value: "0.0003"
       - key: GO_VERSION
-        value: "1.23.0"
+        value: "1.25.5"
