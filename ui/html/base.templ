@@ -42,14 +42,14 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
         </main>
         if flash != "" {
             <div class="toast-container" id="toast-container">
-                <div class="toast" id="toast-flash">
+                <div class="toast" id="toast-flash" data-flash={ flash }>
                     <div class="toast-content">
-                        <div class="toast-icon">
+                        <div class="toast-icon" id="toast-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         </div>
                         <div class="toast-body">
-                            <div class="toast-title">Notification</div>
-                            <div class="toast-description">{ flash }</div>
+                            <div class="toast-title" id="toast-title">Notification</div>
+                            <div class="toast-description" id="toast-description">{ flash }</div>
                         </div>
                     </div>
                     <button class="toast-close" onclick="this.closest('.toast').classList.add('toast--exit'); setTimeout(function(){ var c = document.getElementById('toast-container'); if(c) c.remove(); }, 300)" aria-label="Close">
@@ -81,9 +81,55 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
                 });
             });
 
-            // Toast auto-dismiss after 5s
             var toast = document.getElementById('toast-flash');
             if (toast) {
+                var toastTitle = document.getElementById('toast-title');
+                var toastDescription = document.getElementById('toast-description');
+                var toastIcon = document.getElementById('toast-icon');
+                var rawFlash = toast.getAttribute('data-flash') || '';
+
+                var typeMap = {
+                    success: {
+                        title: 'Success',
+                        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+                    },
+                    error: {
+                        title: 'Error',
+                        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+                    },
+                    warning: {
+                        title: 'Warning',
+                        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3l-8.47-14.14a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+                    },
+                    info: {
+                        title: 'Info',
+                        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+                    }
+                };
+
+                var flashType = 'info';
+                var flashMessage = rawFlash;
+                var flashSep = rawFlash.indexOf(':');
+                if (flashSep > 0) {
+                    var maybeType = rawFlash.slice(0, flashSep).toLowerCase();
+                    if (typeMap[maybeType]) {
+                        flashType = maybeType;
+                        flashMessage = rawFlash.slice(flashSep + 1);
+                    }
+                }
+
+                toast.classList.add('toast--' + flashType);
+                if (toastTitle && typeMap[flashType]) {
+                    toastTitle.textContent = typeMap[flashType].title;
+                }
+                if (toastDescription) {
+                    toastDescription.textContent = flashMessage;
+                }
+                if (toastIcon && typeMap[flashType]) {
+                    toastIcon.innerHTML = typeMap[flashType].icon;
+                }
+
+                // Toast auto-dismiss after 5s
                 setTimeout(function() {
                     toast.classList.add('toast--exit');
                     setTimeout(function() {

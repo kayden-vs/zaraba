@@ -43,6 +43,10 @@ func (app *application) RenderPage(
 	renderFunc func(flash string, isAuthenticated bool, csrfToken string) templ.Component,
 ) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, private")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+	w.Header().Set("Vary", "Cookie")
 	flash := app.sessionManager.PopString(r.Context(), "flash")
 	isAuth := app.isAuthenticated(r)
 	csrfToken := nosurf.Token(r)

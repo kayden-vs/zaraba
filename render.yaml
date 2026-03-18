@@ -49,7 +49,7 @@ services:
       - key: DISABLE_CSRF
         value: "false"
       - key: START_SIMULATOR
-        value: "true"
+        value: "false"
       - key: SIM_EMAIL
         sync: false # bot account email
       - key: SIM_PASSWORD

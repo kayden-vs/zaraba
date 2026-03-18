@@ -16,15 +16,134 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
             <div class="symbol-info">
                 <span class="symbol-name">{ strings.ToUpper(symbol.Name) }/USDT</span>
             </div>
-            <div class="symbol-price mono">
+            <div class="symbol-price mono" id="trade-header-price">
                 ${ fmt.Sprintf("%.2f", symbol.Price) }
             </div>
             if symbol.Change24h >= 0 {
-                <span class="price-change positive">+{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
+                <span class="price-change positive" id="trade-header-change">+{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
             } else {
-                <span class="price-change negative">{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
+                <span class="price-change negative" id="trade-header-change">{ fmt.Sprintf("%.2f", symbol.Change24h) }%</span>
             }
         </div>
+
+    <script>
+        (function() {
+            const tradeSymbolID = {{ fmt.Sprintf("%q", strings.ToLower(symbol.ID)) }};
+            const tradeSymbolTicker = {{ fmt.Sprintf("%q", strings.ToLower(symbol.Symbol)) }};
+            const tradeSymbolName = {{ fmt.Sprintf("%q", strings.ToLower(symbol.Name)) }};
+            const tradeSymbolBase = {{ fmt.Sprintf("%q", strings.ToLower(symbol.Base)) }};
+            const priceEl = document.getElementById('trade-header-price');
+            const changeEl = document.getElementById('trade-header-change');
+            if (!priceEl || !changeEl) {
+                return;
+            }
+
+            let lastPrice = {{ fmt.Sprintf("%.8f", symbol.Price) }};
+            window.__tradeLivePrice = lastPrice;
+
+            const es = new EventSource('/sse/markets');
+
+            function num(value) {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : NaN;
+            }
+
+            function normalize(value) {
+                return String(value || '').trim().toLowerCase();
+            }
+
+            function getPrice(item) {
+                return num(
+                    item.current_price ??
+                    item.currentPrice ??
+                    item.price ??
+                    item.last_price ??
+                    item.lastPrice,
+                );
+            }
+
+            function getChange(item) {
+                return num(
+                    item.price_change_percentage_24h ??
+                    item.priceChangePercentage24h ??
+                    item.change24h ??
+                    item.change_24h,
+                );
+            }
+
+            function matchesSymbol(item) {
+                const id = normalize(item.id);
+                const ticker = normalize(item.symbol);
+                const name = normalize(item.name);
+                const base = normalize(item.base);
+
+                return (
+                    id === tradeSymbolID ||
+                    ticker === tradeSymbolTicker ||
+                    name === tradeSymbolName ||
+                    base === tradeSymbolBase
+                );
+            }
+
+            function toList(payload) {
+                if (Array.isArray(payload)) {
+                    return payload;
+                }
+                if (payload && Array.isArray(payload.data)) {
+                    return payload.data;
+                }
+                return [];
+            }
+
+            es.onmessage = function(event) {
+                let payload;
+                try {
+                    payload = JSON.parse(event.data);
+                } catch (_) {
+                    return;
+                }
+
+                const items = toList(payload);
+                if (items.length === 0) {
+                    return;
+                }
+
+                const marketItem = items.find(function(item) {
+                    return item && matchesSymbol(item);
+                });
+                if (!marketItem) {
+                    return;
+                }
+
+                const nextPrice = getPrice(marketItem);
+                if (Number.isFinite(nextPrice) && nextPrice > 0) {
+                    priceEl.classList.remove('price-up-tick', 'price-down-tick', 'price-flash-up', 'price-flash-down');
+
+                    if (Number.isFinite(lastPrice) && lastPrice > 0 && nextPrice !== lastPrice) {
+                        const up = nextPrice > lastPrice;
+                        priceEl.classList.add(up ? 'price-up-tick' : 'price-down-tick');
+                        void priceEl.offsetWidth;
+                        priceEl.classList.add(up ? 'price-flash-up' : 'price-flash-down');
+                    }
+
+                    priceEl.textContent = '$' + nextPrice.toFixed(2);
+                    lastPrice = nextPrice;
+                    window.__tradeLivePrice = nextPrice;
+                }
+
+                const change = getChange(marketItem);
+                if (Number.isFinite(change)) {
+                    changeEl.classList.remove('positive', 'negative');
+                    changeEl.classList.add(change >= 0 ? 'positive' : 'negative');
+                    changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                }
+            };
+
+            es.onerror = function() {
+                console.log('Trade header SSE disconnected, browser will retry automatically.');
+            };
+        })();
+    </script>
 
         <!-- TradingView Chart -->
         <div class="tradingview-widget-container">
@@ -404,7 +523,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
 
                 // Data from Go template
                 const availableMargin = {{ fmt.Sprintf("%.2f", float64(walletBalance)/1000000) }};
-                const currentPrice = {{ fmt.Sprintf("%.2f", symbol.Price) }};
+                const initialPrice = {{ fmt.Sprintf("%.2f", symbol.Price) }};
                 const symbolName = '{{ strings.ToUpper(symbol.Name) }}';
                 const symbolID = '{{ symbol.ID }}';
                 const orderForm = document.getElementById('trade-order-form');
@@ -423,6 +542,14 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 
                 let currentSide = 'buy';
                 let currentOrderType = 'limit';
+
+                function activePrice() {
+                    const live = Number(window.__tradeLivePrice);
+                    if (Number.isFinite(live) && live > 0) {
+                        return live;
+                    }
+                    return initialPrice;
+                }
 
                 // Buy/Sell Toggle with smooth color transition
                 if (buyBtn) {
@@ -486,7 +613,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                         this.classList.add('active');
                         
                         const percent = parseFloat(this.dataset.percent);
-                        const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || currentPrice) : currentPrice;
+                        const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || activePrice()) : activePrice();
                         if (price > 0) {
                             const amount = (availableMargin * percent / 100) / price;
                             amountInput.value = amount.toFixed(8);
@@ -498,7 +625,7 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 // Calculate Total
                 function calculateTotal() {
                     const amount = parseFloat(amountInput.value) || 0;
-                    const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || 0) : currentPrice;
+                    const price = currentOrderType === 'limit' ? (parseFloat(priceInput.value) || 0) : activePrice();
                     const total = amount * price;
                     if (totalDisplay) {
                         totalDisplay.textContent = total.toFixed(2) + ' USDT';
@@ -545,8 +672,8 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 }
 
                 // Set initial price for limit orders
-                if (priceInput && currentPrice > 0) {
-                    priceInput.value = currentPrice.toFixed(2);
+                if (priceInput && initialPrice > 0) {
+                    priceInput.value = initialPrice.toFixed(2);
                 }
 
                 // Initialize buy mode

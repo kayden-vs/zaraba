@@ -23,6 +23,13 @@ func NewExchangeServer() *ExchangeServer {
 	}
 }
 
+func (s *ExchangeServer) ResetOrderbook() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.orderbook = engine.NewOrderbook()
+	go BroadcastOrderBook(s)
+}
+
 func (s *ExchangeServer) PlaceMarketOrder(ctx context.Context, order *pb.Order) (*pb.Match, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -87,6 +94,17 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 	s.orderbook.PlaceLimitOrder(req.Price, engineOrder)
 
 	go BroadcastOrderBook(s)
+
+	tradeSide := "sell"
+	if req.Order.Bid {
+		tradeSide = "buy"
+	}
+	BroadcastTrade(TradeTick{
+		Price:     req.Price,
+		Size:      req.Order.Size,
+		Side:      tradeSide,
+		Timestamp: time.Now().UnixMilli(),
+	})
 
 	// Since PlaceLimitOrder doesn't return matches, return an empty match
 	return &pb.Match{

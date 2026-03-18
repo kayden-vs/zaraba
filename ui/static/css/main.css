@@ -1057,6 +1057,26 @@ tbody tr.clickable {
   animation: toastIn 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
 }
 
+.toast--success {
+  border-color: rgba(22, 199, 132, 0.4);
+  background: linear-gradient(140deg, rgba(22, 199, 132, 0.13), var(--bg-secondary) 45%);
+}
+
+.toast--error {
+  border-color: rgba(234, 57, 67, 0.45);
+  background: linear-gradient(140deg, rgba(234, 57, 67, 0.14), var(--bg-secondary) 45%);
+}
+
+.toast--warning {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: linear-gradient(140deg, rgba(251, 191, 36, 0.16), var(--bg-secondary) 45%);
+}
+
+.toast--info {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: linear-gradient(140deg, rgba(59, 130, 246, 0.14), var(--bg-secondary) 45%);
+}
+
 .toast--exit {
   animation: toastOut 0.3s ease-in forwards;
 }
@@ -1099,6 +1119,26 @@ tbody tr.clickable {
   justify-content: center;
   color: var(--color-buy);
   margin-top: 1px;
+}
+
+.toast--success .toast-icon,
+.toast--success .toast-title {
+  color: var(--color-buy);
+}
+
+.toast--error .toast-icon,
+.toast--error .toast-title {
+  color: var(--color-sell);
+}
+
+.toast--warning .toast-icon,
+.toast--warning .toast-title {
+  color: var(--color-neutral);
+}
+
+.toast--info .toast-icon,
+.toast--info .toast-title {
+  color: var(--accent-primary);
 }
 
 .toast-body {
@@ -1150,6 +1190,22 @@ tbody tr.clickable {
   background-color: var(--accent-primary);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   animation: toastTimer 5s linear forwards;
+}
+
+.toast--success::after {
+  background-color: var(--color-buy);
+}
+
+.toast--error::after {
+  background-color: var(--color-sell);
+}
+
+.toast--warning::after {
+  background-color: var(--color-neutral);
+}
+
+.toast--info::after {
+  background-color: var(--accent-primary);
 }
 
 @keyframes toastTimer {
@@ -1265,6 +1321,48 @@ tbody tr.clickable {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-2);
+}
+
+.heading .symbol-name {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.heading .symbol-price {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
+}
+
+.heading .symbol-price.price-up-tick {
+  color: var(--color-buy);
+}
+
+.heading .symbol-price.price-down-tick {
+  color: var(--color-sell);
+}
+
+.heading .price-change {
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-sm);
+}
+
+.heading .price-change.positive {
+  color: var(--color-buy);
+  background-color: var(--color-buy-subtle);
+}
+
+.heading .price-change.negative {
+  color: var(--color-sell);
+  background-color: var(--color-sell-subtle);
 }
 
 .heading h1:first-child {
@@ -2990,6 +3088,10 @@ form:not(.auth-form):not(.header-logout-form) > div {
   .order-type-selector {
     flex-direction: column;
     gap: var(--space-2);
+  }
+
+  .radio-option {
+    min-height: unset;
   }
 }
 

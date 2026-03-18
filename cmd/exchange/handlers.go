@@ -88,7 +88,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Account created Succesfully.")
+	app.sessionManager.Put(r.Context(), "flash", "success:Account created Succesfully.")
 
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
@@ -169,7 +169,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
-	app.sessionManager.Put(r.Context(), "flash", "Logged in succesfully!")
+	app.sessionManager.Put(r.Context(), "flash", "success:Logged in succesfully!")
 
 	http.Redirect(w, r, "/markets", http.StatusSeeOther)
 }
@@ -182,7 +182,7 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-	app.sessionManager.Put(r.Context(), "flash", "You've been logged out Succesfully!")
+	app.sessionManager.Put(r.Context(), "flash", "success:You've been logged out Succesfully!")
 	http.Redirect(w, r, "/markets", http.StatusSeeOther)
 }
 
@@ -209,6 +209,7 @@ func (app *application) MarketsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) TradeHandler(w http.ResponseWriter, r *http.Request) {
 	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	app.safeEnsureDemoLiquidity()
 
 	symbolID := chi.URLParam(r, "symbol")
 
@@ -274,13 +275,13 @@ func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request
 	// add to wallet
 	if transctionType == "deposit" {
 		_, err = app.wallet.CreditWallet(int64(userID), int64(amount))
-		app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d added successfully!", amountUser))
+		app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("success:$%d added successfully!", amountUser))
 	}
 
 	// debit from wallet
 	if transctionType == "withdraw" {
 		_, err = app.wallet.DebitWallet(int64(userID), amount)
-		app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("$%d withdrawn successfully!", amountUser))
+		app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("success:$%d withdrawn successfully!", amountUser))
 	}
 
 	// TODO: add to portfolio summary
@@ -289,10 +290,7 @@ func (app *application) WalletHandlerPost(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) SseMarketHandler(w http.ResponseWriter, r *http.Request) {
-	// set SSE headers
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
+	setSSEHeaders(w)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -300,34 +298,44 @@ func (app *application) SseMarketHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Establish the connection immediately so the browser doesn't time out
-	// waiting for the first event
 	w.WriteHeader(http.StatusOK)
+	if _, err := fmt.Fprintf(w, ": connected\n\n"); err != nil {
+		return
+	}
+	if _, err := fmt.Fprintf(w, "data: []\n\n"); err != nil {
+		return
+	}
 	flusher.Flush()
 
-	// register this client with the broker
 	clientChan := service.PriceBroker.AddClient()
 	defer service.PriceBroker.RemoveClient(clientChan)
+	heartbeat := time.NewTicker(15 * time.Second)
+	defer heartbeat.Stop()
 
 	for {
 		select {
-		case data := <-clientChan:
-			// SSE format requires "data: ...\n\n"
-			fmt.Fprintf(w, "data: %s\n\n", data)
-			flusher.Flush() // push to browser immediately
+		case data, open := <-clientChan:
+			if !open {
+				return
+			}
+			if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+				return
+			}
+			flusher.Flush()
+		case <-heartbeat.C:
+			if _, err := fmt.Fprintf(w, ": ping\n\n"); err != nil {
+				return
+			}
+			flusher.Flush()
 		case <-r.Context().Done():
-			// client disconnected
-			// defer above handles cleanup automatically
 			return
 		}
 	}
 }
 
 func (app *application) SseOrderBookHandler(w http.ResponseWriter, r *http.Request) {
-	// set SSE headers
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
+	app.safeEnsureDemoLiquidity()
+	setSSEHeaders(w)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -335,21 +343,38 @@ func (app *application) SseOrderBookHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Establish the connection immediately
 	w.WriteHeader(http.StatusOK)
+	if _, err := fmt.Fprintf(w, ": connected\n\n"); err != nil {
+		return
+	}
 	flusher.Flush()
 
-	// Register client first, then broadcast so this client receives it
 	clientChan := service.OrderbookBroker.AddClient()
 	defer service.OrderbookBroker.RemoveClient(clientChan)
 
-	// Send current orderbook state immediately on connect
 	service.BroadcastOrderBook(app.exchangeServer)
+	ticker := time.NewTicker(3 * time.Second)
+	heartbeat := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+	defer heartbeat.Stop()
 
 	for {
 		select {
-		case data := <-clientChan:
-			fmt.Fprintf(w, "data: %s\n\n", data)
+		case data, open := <-clientChan:
+			if !open {
+				return
+			}
+			if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+				return
+			}
+			flusher.Flush()
+		case <-ticker.C:
+			app.safeEnsureDemoLiquidity()
+			service.BroadcastOrderBook(app.exchangeServer)
+		case <-heartbeat.C:
+			if _, err := fmt.Fprintf(w, ": ping\n\n"); err != nil {
+				return
+			}
 			flusher.Flush()
 		case <-r.Context().Done():
 			return
@@ -358,9 +383,8 @@ func (app *application) SseOrderBookHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) SseTradesHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
+	app.safeEnsureDemoLiquidity()
+	setSSEHeaders(w)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -369,24 +393,63 @@ func (app *application) SseTradesHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if _, err := fmt.Fprintf(w, ": connected\n\n"); err != nil {
+		return
+	}
 	flusher.Flush()
 
 	clientChan := service.TradeBroker.AddClient()
 	defer service.TradeBroker.RemoveClient(clientChan)
 
 	initial := service.RecentTradesPayload()
-	fmt.Fprintf(w, "data: %s\n\n", initial)
+	if _, err := fmt.Fprintf(w, "data: %s\n\n", initial); err != nil {
+		return
+	}
 	flusher.Flush()
+	ticker := time.NewTicker(3 * time.Second)
+	heartbeat := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+	defer heartbeat.Stop()
 
 	for {
 		select {
-		case data := <-clientChan:
-			fmt.Fprintf(w, "data: %s\n\n", data)
+		case data, open := <-clientChan:
+			if !open {
+				return
+			}
+			if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+				return
+			}
+			flusher.Flush()
+		case <-ticker.C:
+			app.safeEnsureDemoLiquidity()
+		case <-heartbeat.C:
+			if _, err := fmt.Fprintf(w, ": ping\n\n"); err != nil {
+				return
+			}
 			flusher.Flush()
 		case <-r.Context().Done():
 			return
 		}
 	}
+}
+
+func (app *application) safeEnsureDemoLiquidity() {
+	defer func() {
+		if rec := recover(); rec != nil {
+			app.errorLog.Printf("demo liquidity panic recovered: %v", rec)
+		}
+	}()
+
+	service.EnsureDemoLiquidity(app.exchangeServer)
+}
+
+func setSSEHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-transform")
+	w.Header().Set("Connection", "keep-alive")
+	// Disable proxy buffering for long-lived event streams.
+	w.Header().Set("X-Accel-Buffering", "no")
 }
 
 func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Request) {
@@ -494,6 +557,8 @@ func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) ensureMarketDepth(bid bool, size int64) error {
+	service.EnsureDemoLiquidityForMarketOrder(app.exchangeServer, bid, size)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -502,15 +567,14 @@ func (app *application) ensureMarketDepth(bid bool, size int64) error {
 		return fmt.Errorf("failed to read orderbook depth")
 	}
 
-	var total int64
-	if bid {
-		for _, limit := range snapshot.Asks {
-			total += limit.TotalVolume
+	total := depthForMarketSide(snapshot, bid)
+	if total < size {
+		service.EnsureDemoLiquidityForMarketOrder(app.exchangeServer, bid, size)
+		snapshot, err = app.exchangeServer.StreamOrderBook(ctx, &pb.OrderBookRequest{Market: "default"})
+		if err != nil {
+			return fmt.Errorf("failed to read orderbook depth")
 		}
-	} else {
-		for _, limit := range snapshot.Bids {
-			total += limit.TotalVolume
-		}
+		total = depthForMarketSide(snapshot, bid)
 	}
 
 	if total < size {
@@ -518,6 +582,26 @@ func (app *application) ensureMarketDepth(bid bool, size int64) error {
 	}
 
 	return nil
+}
+
+func depthForMarketSide(snapshot *pb.OrderbookSnapshot, bid bool) int64 {
+	if snapshot == nil {
+		return 0
+	}
+
+	var total int64
+	if bid {
+		for _, limit := range snapshot.Asks {
+			total += limit.TotalVolume
+		}
+		return total
+	}
+
+	for _, limit := range snapshot.Bids {
+		total += limit.TotalVolume
+	}
+
+	return total
 }
 
 func (app *application) bestPrice(bid bool) (int64, error) {
@@ -627,7 +711,7 @@ func (app *application) respondOrderError(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", message)
+	app.sessionManager.Put(r.Context(), "flash", "error:"+message)
 	http.Redirect(w, r, "/trade/"+symbol, http.StatusSeeOther)
 }
 
@@ -641,7 +725,7 @@ func (app *application) respondOrderSuccess(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", message)
+	app.sessionManager.Put(r.Context(), "flash", "success:"+message)
 	http.Redirect(w, r, "/trade/"+symbol, http.StatusSeeOther)
 }
 

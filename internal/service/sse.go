@@ -180,6 +180,12 @@ func RecentTradesPayload() []byte {
 	return jsonData
 }
 
+func RecentTradesCount() int {
+	tradeStore.mu.RLock()
+	defer tradeStore.mu.RUnlock()
+	return len(tradeStore.trades)
+}
+
 func trimSnapshot(snapshot *pb.OrderbookSnapshot, depth int) *pb.OrderbookSnapshot {
 	if snapshot == nil || depth <= 0 {
 		return snapshot
