@@ -165,7 +165,7 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 			matches = append(matches, limitMatches...)
 
 			if len(ob.Asks[i].Orders) == 0 {
-				ob.clearLimit(true, ob.Asks[i])
+				ob.clearLimit(false, ob.Asks[i])
 				i--
 			}
 		}

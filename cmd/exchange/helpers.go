@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-playground/form"
@@ -15,6 +16,8 @@ import (
 	"github.com/kayden-vs/zaraba/ui/html/pages"
 	"github.com/kayden-vs/zaraba/ui/html/partials"
 )
+
+var marketDataHTTPClient = &http.Client{Timeout: 4 * time.Second}
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
@@ -111,11 +114,23 @@ func (app *application) fetchCoinMarket() ([]pages.CoinMarketProps, error) {
 		"&price_change_percentage=24h" +
 		fmt.Sprintf("&x_cg_demo_api_key=%s", os.Getenv("API_KEY"))
 
-	resp, err := http.Get(url)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := marketDataHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, fmt.Errorf("market API returned status %d", resp.StatusCode)
+	}
 
 	var markets []pages.CoinMarketProps
 	if err := json.NewDecoder(resp.Body).Decode(&markets); err != nil {
@@ -132,11 +147,24 @@ func (app *application) FetchSymbolData(symbolID string) (pages.CoinMarketProps,
 		"&price_change_percentage=24h" +
 		fmt.Sprintf("&x_cg_demo_api_key=%s", os.Getenv("API_KEY"))
 
-	resp, err := http.Get(url)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return pages.CoinMarketProps{}, err
+	}
+
+	resp, err := marketDataHTTPClient.Do(req)
 	if err != nil {
 		return pages.CoinMarketProps{}, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return pages.CoinMarketProps{}, fmt.Errorf("symbol API returned status %d", resp.StatusCode)
+	}
+
 	symbolData := []pages.CoinMarketProps{}
 
 	if err := json.NewDecoder(resp.Body).Decode(&symbolData); err != nil {

@@ -471,6 +471,7 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	var bestAsk int64
 	if bid {
 		wallet, err := app.wallet.GetWallet(int64(userID))
 		if err != nil {
@@ -478,7 +479,7 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		bestAsk, err := app.bestPrice(false)
+		bestAsk, err = app.bestPrice(false)
 		if err != nil {
 			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 			return
@@ -501,6 +502,15 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	if bid {
+		// Market order matches can span multiple levels; use validated best ask as a conservative quote for debit.
+		quoteNotional := engine.CalculateNotionalInt(bestAsk, size)
+		if _, err = app.wallet.DebitWallet(int64(userID), quoteNotional); err != nil {
+			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 
 	message := "market order accepted"
@@ -550,6 +560,14 @@ func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		app.respondOrderError(w, r, symbol, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	if bid {
+		notional := engine.CalculateNotionalInt(order.Price, order.Size)
+		if _, err = app.wallet.DebitWallet(int64(userID), notional); err != nil {
+			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 
 	message := fmt.Sprintf("limit order placed at %s for %s", engine.FormatPrice(price), engine.FormatQuantity(size))
