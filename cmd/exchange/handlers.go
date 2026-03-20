@@ -505,9 +505,16 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 	}
 
 	if bid {
-		// Market order matches can span multiple levels; use validated best ask as a conservative quote for debit.
-		quoteNotional := engine.CalculateNotionalInt(bestAsk, size)
-		if _, err = app.wallet.DebitWallet(int64(userID), quoteNotional); err != nil {
+		executedNotional := int64(0)
+		if match != nil && match.SizeFilled > 0 && match.Price > 0 {
+			executedNotional = engine.CalculateNotionalInt(match.Price, match.SizeFilled)
+		}
+
+		if executedNotional <= 0 {
+			executedNotional = engine.CalculateNotionalInt(bestAsk, size)
+		}
+
+		if _, err = app.wallet.DebitWallet(int64(userID), executedNotional); err != nil {
 			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -555,18 +562,48 @@ func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Reque
 		Size:      size,
 		Timestamp: time.Now().UnixNano(),
 	}
+	originalSize := size
+	lockedNotional := int64(0)
+	if bid {
+		lockedNotional = engine.CalculateNotionalInt(order.Price, order.Size)
+		if _, err = app.wallet.LockAmount(int64(userID), lockedNotional); err != nil {
+			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
 
 	match, err := app.exchangeServer.PlaceLimitOrder(r.Context(), &pb.PlaceLimitOrderRequest{Price: price, Order: order})
 	if err != nil {
+		if bid && lockedNotional > 0 {
+			_, _ = app.wallet.UnlockAmount(int64(userID), lockedNotional)
+		}
 		app.respondOrderError(w, r, symbol, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if bid {
-		notional := engine.CalculateNotionalInt(order.Price, order.Size)
-		if _, err = app.wallet.DebitWallet(int64(userID), notional); err != nil {
-			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
-			return
+		filledSize := originalSize - order.Size
+		if match != nil && match.SizeFilled > 0 {
+			filledSize = match.SizeFilled
+		}
+
+		if filledSize > 0 {
+			executionPrice := order.Price
+			if match != nil && match.Price > 0 {
+				executionPrice = match.Price
+			}
+
+			executedNotional := engine.CalculateNotionalInt(executionPrice, filledSize)
+			if _, err = app.wallet.DebitWallet(int64(userID), executedNotional); err != nil {
+				_, _ = app.wallet.UnlockAmount(int64(userID), lockedNotional)
+				app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			if _, err = app.wallet.UnlockAmount(int64(userID), executedNotional); err != nil {
+				app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
+				return
+			}
 		}
 	}
 

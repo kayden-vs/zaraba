@@ -19,41 +19,47 @@ import (
 // DemoLiquidityManager keeps the orderbook/trades populated on demand for demo usage.
 // It only tops up when handlers call EnsureDemoLiquidity, so there is no always-on loop.
 type DemoLiquidityManager struct {
-	mu            sync.Mutex
-	rng           *rand.Rand
-	lastTopUp     time.Time
-	lastSideBuy   bool
-	minLevels     int
-	spreadBps     float64
-	baseSize      float64
-	basePriceUSD  float64
-	jitterPct     float64
-	cooldown      time.Duration
-	recenterBps   float64
-	priceDriftBps float64
-	priceTTL      time.Duration
-	apiKey        string
-	cachedPrice   int64
-	cachedAt      time.Time
-	enabled       bool
+	mu             sync.Mutex
+	rng            *rand.Rand
+	lastTopUp      time.Time
+	lastSideBuy    bool
+	volatileRegime bool
+	regimeUntil    time.Time
+	minLevels      int
+	spreadBps      float64
+	baseSize       float64
+	basePriceUSD   float64
+	jitterPct      float64
+	cooldown       time.Duration
+	injectDelayMin time.Duration
+	injectDelayMax time.Duration
+	recenterBps    float64
+	priceDriftBps  float64
+	priceTTL       time.Duration
+	apiKey         string
+	cachedPrice    int64
+	cachedAt       time.Time
+	enabled        bool
 }
 
 var demoLiquidity = newDemoLiquidityManager()
 
 func newDemoLiquidityManager() *DemoLiquidityManager {
 	return &DemoLiquidityManager{
-		rng:           rand.New(rand.NewSource(time.Now().UnixNano())),
-		minLevels:     envInt("DEMO_LIQ_MIN_LEVELS", 5),
-		spreadBps:     envFloat("DEMO_LIQ_SPREAD_BPS", 12),
-		baseSize:      envFloat("DEMO_LIQ_BASE_SIZE", 0.003),
-		basePriceUSD:  envFloat("DEMO_LIQ_BASE_PRICE_USD", 74000),
-		jitterPct:     envFloat("DEMO_LIQ_JITTER_PCT", 0.25),
-		cooldown:      time.Duration(envInt("DEMO_LIQ_COOLDOWN_MS", 1500)) * time.Millisecond,
-		recenterBps:   envFloat("DEMO_LIQ_RECENTER_BPS", 300),
-		priceDriftBps: envFloat("DEMO_LIQ_PRICE_DRIFT_BPS", 8),
-		priceTTL:      time.Duration(envInt("DEMO_LIQ_PRICE_TTL_MS", 15000)) * time.Millisecond,
-		apiKey:        os.Getenv("API_KEY"),
-		enabled:       envBool("DEMO_LIQ_ENABLED", true),
+		rng:            rand.New(rand.NewSource(time.Now().UnixNano())),
+		minLevels:      envInt("DEMO_LIQ_MIN_LEVELS", 5),
+		spreadBps:      envFloat("DEMO_LIQ_SPREAD_BPS", 12),
+		baseSize:       envFloat("DEMO_LIQ_BASE_SIZE", 0.003),
+		basePriceUSD:   envFloat("DEMO_LIQ_BASE_PRICE_USD", 74000),
+		jitterPct:      envFloat("DEMO_LIQ_JITTER_PCT", 0.25),
+		cooldown:       time.Duration(envInt("DEMO_LIQ_COOLDOWN_MS", 1500)) * time.Millisecond,
+		injectDelayMin: time.Duration(envInt("DEMO_LIQ_INJECT_DELAY_MIN_MS", 5)) * time.Millisecond,
+		injectDelayMax: time.Duration(envInt("DEMO_LIQ_INJECT_DELAY_MAX_MS", 35)) * time.Millisecond,
+		recenterBps:    envFloat("DEMO_LIQ_RECENTER_BPS", 300),
+		priceDriftBps:  envFloat("DEMO_LIQ_PRICE_DRIFT_BPS", 8),
+		priceTTL:       time.Duration(envInt("DEMO_LIQ_PRICE_TTL_MS", 15000)) * time.Millisecond,
+		apiKey:         os.Getenv("API_KEY"),
+		enabled:        envBool("DEMO_LIQ_ENABLED", true),
 	}
 }
 
@@ -77,6 +83,8 @@ func (m *DemoLiquidityManager) Ensure(server *ExchangeServer) {
 		return
 	}
 
+	m.rotateRegimeIfNeeded()
+
 	snapshot, err := server.StreamOrderBook(context.Background(), &pb.OrderBookRequest{Market: "demo"})
 	if err != nil {
 		log.Printf("demo liquidity: snapshot failed: %v", err)
@@ -90,8 +98,7 @@ func (m *DemoLiquidityManager) Ensure(server *ExchangeServer) {
 
 	bookMid := m.pickMidPrice(snapshot)
 	if m.shouldRecenter(bookMid, targetMid) {
-		server.ResetOrderbook()
-		snapshot = &pb.OrderbookSnapshot{}
+		bookMid = targetMid
 	}
 
 	asks := len(snapshot.Asks)
@@ -118,7 +125,7 @@ func (m *DemoLiquidityManager) Ensure(server *ExchangeServer) {
 	}
 
 	for i := 0; i < maxNeed; i++ {
-		offsetBps := m.spreadBps * float64(i+1)
+		offsetBps := m.currentSpreadBps() * float64(i+1)
 		priceDelta := int64(math.Round(float64(midPrice) * (offsetBps / 10_000.0)))
 		if priceDelta <= 0 {
 			priceDelta = 1
@@ -130,6 +137,7 @@ func (m *DemoLiquidityManager) Ensure(server *ExchangeServer) {
 		if i < needBids {
 			price := midPrice - priceDelta
 			if price > 0 {
+				m.maybeSleepInjectJitter()
 				_, _ = server.PlaceLimitOrder(context.Background(), &pb.PlaceLimitOrderRequest{
 					Price: price,
 					Order: &pb.Order{
@@ -145,6 +153,7 @@ func (m *DemoLiquidityManager) Ensure(server *ExchangeServer) {
 
 		if i < needAsks {
 			price := midPrice + priceDelta
+			m.maybeSleepInjectJitter()
 			_, _ = server.PlaceLimitOrder(context.Background(), &pb.PlaceLimitOrderRequest{
 				Price: price,
 				Order: &pb.Order{
@@ -180,6 +189,8 @@ func (m *DemoLiquidityManager) EnsureForMarketOrder(server *ExchangeServer, bid 
 		return
 	}
 
+	m.rotateRegimeIfNeeded()
+
 	targetMid := m.targetMidPrice(snapshot)
 	if targetMid <= 0 {
 		targetMid = engine.PriceToInt(m.basePriceUSD)
@@ -187,9 +198,7 @@ func (m *DemoLiquidityManager) EnsureForMarketOrder(server *ExchangeServer, bid 
 
 	bookMid := m.pickMidPrice(snapshot)
 	if m.shouldRecenter(bookMid, targetMid) {
-		server.ResetOrderbook()
-		snapshot = &pb.OrderbookSnapshot{}
-		bookMid = 0
+		bookMid = targetMid
 	}
 
 	midPrice := targetMid
@@ -236,7 +245,7 @@ func (m *DemoLiquidityManager) injectDepthForSide(server *ExchangeServer, bid bo
 	remaining := missing
 
 	for i := 0; i < levels && remaining > 0; i++ {
-		offsetBps := m.spreadBps * float64(i+1)
+		offsetBps := m.currentSpreadBps() * float64(i+1)
 		priceDelta := int64(math.Round(float64(midPrice) * (offsetBps / 10_000.0)))
 		if priceDelta <= 0 {
 			priceDelta = 1
@@ -263,6 +272,7 @@ func (m *DemoLiquidityManager) injectDepthForSide(server *ExchangeServer, bid bo
 		}
 
 		orderID := time.Now().UnixNano() + int64(i)
+		m.maybeSleepInjectJitter()
 		_, _ = server.PlaceLimitOrder(context.Background(), &pb.PlaceLimitOrderRequest{
 			Price: price,
 			Order: &pb.Order{
@@ -463,8 +473,55 @@ func (m *DemoLiquidityManager) pulseFlow(server *ExchangeServer) {
 		_ = recover()
 	}()
 
+	m.maybeSleepInjectJitter()
 	_, _ = server.PlaceMarketOrder(context.Background(), order)
 	m.lastSideBuy = sideBuy
+}
+
+func (m *DemoLiquidityManager) rotateRegimeIfNeeded() {
+	now := time.Now()
+	if now.Before(m.regimeUntil) {
+		return
+	}
+
+	// Most intervals stay calm; volatile bursts are short-lived.
+	m.volatileRegime = m.rng.Float64() < 0.25
+	durationMs := 15_000 + m.rng.Intn(20_000)
+	m.regimeUntil = now.Add(time.Duration(durationMs) * time.Millisecond)
+}
+
+func (m *DemoLiquidityManager) currentSpreadBps() float64 {
+	spread := m.spreadBps
+	if m.volatileRegime {
+		spread *= 1.6
+	} else {
+		spread *= 0.9
+	}
+	if spread < 1 {
+		return 1
+	}
+	return spread
+}
+
+func (m *DemoLiquidityManager) maybeSleepInjectJitter() {
+	if m.injectDelayMax <= 0 {
+		return
+	}
+
+	minDelay := m.injectDelayMin
+	maxDelay := m.injectDelayMax
+	if maxDelay < minDelay {
+		maxDelay = minDelay
+	}
+
+	if maxDelay == minDelay {
+		time.Sleep(minDelay)
+		return
+	}
+
+	span := maxDelay - minDelay
+	jitter := time.Duration(m.rng.Int63n(int64(span + time.Millisecond)))
+	time.Sleep(minDelay + jitter)
 }
 
 func max(a, b int64) int64 {
@@ -493,6 +550,11 @@ func (m *DemoLiquidityManager) pickMidPrice(snapshot *pb.OrderbookSnapshot) int6
 func (m *DemoLiquidityManager) nextSize() int64 {
 	jitter := 1 - m.jitterPct + m.rng.Float64()*(2*m.jitterPct)
 	size := m.baseSize * jitter
+	if m.volatileRegime {
+		size *= 1.35
+	} else {
+		size *= 0.9
+	}
 	if size <= 0 {
 		size = m.baseSize
 	}

@@ -161,6 +161,10 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 		}
 
 		for i := 0; i < len(ob.Asks); i++ {
+			if o.IsFilled() {
+				break
+			}
+
 			limitMatches := ob.Asks[i].Fill(o)
 			matches = append(matches, limitMatches...)
 
@@ -175,6 +179,10 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 		}
 
 		for i := 0; i < len(ob.Bids); i++ {
+			if o.IsFilled() {
+				break
+			}
+
 			limitMatches := ob.Bids[i].Fill(o)
 			matches = append(matches, limitMatches...)
 
@@ -188,10 +196,39 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 	return matches
 }
 
-func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
-	// TODO: Check match for the limit order before putting it to ob
-	// 		 handle partial execution and only add remaining portion to the ob
+func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) []Match {
+	matches := []Match{}
 
+	if o.Bid {
+		for len(ob.Asks) > 0 && !o.IsFilled() && ob.Asks[0].Price <= price {
+			bestAsk := ob.Asks[0]
+			limitMatches := bestAsk.Fill(o)
+			matches = append(matches, limitMatches...)
+
+			if len(bestAsk.Orders) == 0 {
+				ob.clearLimit(false, bestAsk)
+			}
+		}
+	} else {
+		for len(ob.Bids) > 0 && !o.IsFilled() && ob.Bids[0].Price >= price {
+			bestBid := ob.Bids[0]
+			limitMatches := bestBid.Fill(o)
+			matches = append(matches, limitMatches...)
+
+			if len(bestBid.Orders) == 0 {
+				ob.clearLimit(true, bestBid)
+			}
+		}
+	}
+
+	if !o.IsFilled() {
+		ob.addRestingLimitOrder(price, o)
+	}
+
+	return matches
+}
+
+func (ob *Orderbook) addRestingLimitOrder(price int64, o *Order) {
 	var limit *Limit
 	if o.Bid {
 		limit = ob.BidLimits[price]
@@ -204,21 +241,15 @@ func (ob *Orderbook) PlaceLimitOrder(price int64, o *Order) {
 
 		if o.Bid {
 			ob.Bids = append(ob.Bids, limit)
-
-			// sort bids here
 			sort.Slice(ob.Bids, func(i, j int) bool {
 				return ob.Bids[i].Price > ob.Bids[j].Price
 			})
-
 			ob.BidLimits[price] = limit
 		} else {
 			ob.Asks = append(ob.Asks, limit)
-
-			// sort asks here
 			sort.Slice(ob.Asks, func(i, j int) bool {
 				return ob.Asks[i].Price < ob.Asks[j].Price
 			})
-
 			ob.AskLimits[price] = limit
 		}
 	}

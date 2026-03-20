@@ -110,8 +110,40 @@ func (w *WalletModel) GetTotalBalance(userID int64) (int64, error) {
 }
 
 func (w *WalletModel) LockAmount(userID, amount int64) (*Wallet, error) {
+	if amount < 0 {
+		return nil, fmt.Errorf("Invalid amount: %d", amount)
+	}
+
 	stmt := `UPDATE wallets
 		SET locked = locked + $1, updated_at = $2
+		WHERE user_id = $3 AND (balance - locked) >= $1
+		RETURNING user_id, balance, locked, updated_at`
+
+	wallet := &Wallet{}
+
+	err := w.DB.QueryRow(stmt, amount, time.Now(), userID).Scan(
+		&wallet.UserID,
+		&wallet.Balance,
+		&wallet.Locked,
+		&wallet.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("insufficient available balance")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return wallet, nil
+}
+
+func (w *WalletModel) UnlockAmount(userID, amount int64) (*Wallet, error) {
+	if amount < 0 {
+		return nil, fmt.Errorf("Invalid amount: %d", amount)
+	}
+
+	stmt := `UPDATE wallets
+		SET locked = locked - $1, updated_at = $2
 		WHERE user_id = $3 AND locked >= $1
 		RETURNING user_id, balance, locked, updated_at`
 
@@ -123,27 +155,9 @@ func (w *WalletModel) LockAmount(userID, amount int64) (*Wallet, error) {
 		&wallet.Locked,
 		&wallet.UpdatedAt,
 	)
-	if err != nil {
-		return nil, err
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("insufficient locked balance")
 	}
-
-	return wallet, nil
-}
-
-func (w *WalletModel) UnlockAmount(userID, amount int64) (*Wallet, error) {
-	stmt := `UPDATE wallets
-		SET locked = locked - $1, updated_at = $2
-		WHERE user_id = $3
-		RETURNING user_id, balance, locked, updated_at`
-
-	wallet := &Wallet{}
-
-	err := w.DB.QueryRow(stmt, amount, time.Now(), userID).Scan(
-		&wallet.UserID,
-		&wallet.Balance,
-		&wallet.Locked,
-		&wallet.UpdatedAt,
-	)
 	if err != nil {
 		return nil, err
 	}

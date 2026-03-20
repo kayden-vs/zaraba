@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"sync"
 	"time"
 
@@ -59,27 +60,7 @@ func (s *ExchangeServer) PlaceMarketOrder(ctx context.Context, order *pb.Order) 
 		})
 	}
 
-	// Return the first match if any, or an empty match
-	if len(matches) > 0 {
-		firstMatch := matches[0]
-		return &pb.Match{
-			Ask: &pb.Order{
-				Id: firstMatch.Ask.Id, Price: firstMatch.Ask.Price,
-				Size: firstMatch.Ask.Size, Bid: firstMatch.Ask.Bid,
-				Timestamp: firstMatch.Ask.Timestamp,
-			},
-			Bid: &pb.Order{
-				Id: firstMatch.Bid.Id, Price: firstMatch.Bid.Price,
-				Size: firstMatch.Bid.Size, Bid: firstMatch.Bid.Bid,
-				Timestamp: firstMatch.Bid.Timestamp,
-			},
-			SizeFilled: firstMatch.SizeFilled,
-			Price:      firstMatch.Price,
-		}, nil
-	}
-
-	// Return empty match if no matches occurred
-	return &pb.Match{}, nil
+	return aggregateMatch(matches), nil
 }
 
 func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimitOrderRequest) (*pb.Match, error) {
@@ -91,30 +72,64 @@ func (s *ExchangeServer) PlaceLimitOrder(ctx context.Context, req *pb.PlaceLimit
 		Order: req.Order,
 	}
 
-	s.orderbook.PlaceLimitOrder(req.Price, engineOrder)
+	matches := s.orderbook.PlaceLimitOrder(req.Price, engineOrder)
 
 	go BroadcastOrderBook(s)
 
-	tradeSide := "sell"
+	takerSide := "sell"
 	if req.Order.Bid {
-		tradeSide = "buy"
+		takerSide = "buy"
 	}
-	BroadcastTrade(TradeTick{
-		Price:     req.Price,
-		Size:      req.Order.Size,
-		Side:      tradeSide,
-		Timestamp: time.Now().UnixMilli(),
-	})
+	for _, m := range matches {
+		if m.SizeFilled <= 0 {
+			continue
+		}
+		BroadcastTrade(TradeTick{
+			Price:     m.Price,
+			Size:      m.SizeFilled,
+			Side:      takerSide,
+			Timestamp: time.Now().UnixMilli(),
+		})
+	}
 
-	// Since PlaceLimitOrder doesn't return matches, return an empty match
+	return aggregateMatch(matches), nil
+}
+
+func aggregateMatch(matches []engine.Match) *pb.Match {
+	if len(matches) == 0 {
+		return &pb.Match{}
+	}
+
+	first := matches[0]
+	var totalFilled int64
+	var totalNotional float64
+	for _, m := range matches {
+		if m.SizeFilled <= 0 || m.Price <= 0 {
+			continue
+		}
+		totalFilled += m.SizeFilled
+		totalNotional += float64(m.Price) * float64(m.SizeFilled)
+	}
+
+	vwap := first.Price
+	if totalFilled > 0 {
+		vwap = int64(math.Round(totalNotional / float64(totalFilled)))
+	}
+
 	return &pb.Match{
 		Ask: &pb.Order{
-			Id: req.Order.Id, Price: req.Order.Price,
-			Size: req.Order.Size, Bid: req.Order.Bid,
-			Timestamp: req.Order.Timestamp,
+			Id: first.Ask.Id, Price: first.Ask.Price,
+			Size: first.Ask.Size, Bid: first.Ask.Bid,
+			Timestamp: first.Ask.Timestamp,
 		},
-		Price: req.Price,
-	}, nil
+		Bid: &pb.Order{
+			Id: first.Bid.Id, Price: first.Bid.Price,
+			Size: first.Bid.Size, Bid: first.Bid.Bid,
+			Timestamp: first.Bid.Timestamp,
+		},
+		SizeFilled: totalFilled,
+		Price:      vwap,
+	}
 }
 
 func (s *ExchangeServer) StreamOrderBook(ctx context.Context, req *pb.OrderBookRequest) (*pb.OrderbookSnapshot, error) {

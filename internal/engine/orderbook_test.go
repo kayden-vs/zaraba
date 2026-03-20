@@ -60,6 +60,23 @@ func TestPlaceMarketOrder(t *testing.T) {
 	fmt.Printf("%+v\n", matches)
 }
 
+func TestPlaceMarketOrderStopsWhenFilled(t *testing.T) {
+	ob := NewOrderbook()
+
+	// Two ask levels; buy order only needs part of first level.
+	ob.PlaceLimitOrder(100, NewOrder(false, 30))
+	ob.PlaceLimitOrder(101, NewOrder(false, 40))
+
+	buyOrder := NewOrder(true, 20)
+	matches := ob.PlaceMarketOrder(buyOrder)
+
+	assert(t, len(matches), 1)
+	assert(t, matches[0].Price, int64(100))
+	assert(t, matches[0].SizeFilled, int64(20))
+	assert(t, ob.Asks[0].TotalVolume, int64(10))
+	assert(t, ob.AskTotalVolume(), int64(50))
+}
+
 func TestPlaceMarketOrderMultiFill(t *testing.T) {
 	ob := NewOrderbook()
 
@@ -96,4 +113,28 @@ func TestCancelOrder(t *testing.T) {
 
 	ob.CancelOrder(buyOrderA)
 	assert(t, ob.BidTotalVolume(), int64(5))
+}
+
+func TestPlaceLimitOrderCrossesAndRestsRemainder(t *testing.T) {
+	ob := NewOrderbook()
+
+	// Existing ask liquidity: 10 @ 100, 15 @ 101
+	ob.PlaceLimitOrder(100, NewOrder(false, 10))
+	ob.PlaceLimitOrder(101, NewOrder(false, 15))
+
+	// Buy limit crosses both levels and should rest remaining 5 at 101.
+	buy := NewOrder(true, 30)
+	matches := ob.PlaceLimitOrder(101, buy)
+
+	assert(t, len(matches), 2)
+	assert(t, matches[0].Price, int64(100))
+	assert(t, matches[0].SizeFilled, int64(10))
+	assert(t, matches[1].Price, int64(101))
+	assert(t, matches[1].SizeFilled, int64(15))
+	assert(t, buy.Size, int64(5))
+
+	assert(t, len(ob.Asks), 0)
+	assert(t, len(ob.Bids), 1)
+	assert(t, ob.Bids[0].Price, int64(101))
+	assert(t, ob.Bids[0].TotalVolume, int64(5))
 }
