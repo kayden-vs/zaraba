@@ -402,6 +402,10 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 if (bids.length === 0) {
                     bidsContainer.innerHTML = '<div class="orderbook-row bid placeholder-row"><span class="price">--</span><span class="size">--</span><span class="total">--</span></div>';
                 }
+
+                if ((asks.length > 0 || bids.length > 0) && window.zarabaBoneyard) {
+                    window.zarabaBoneyard.reveal('.orderbook');
+                }
             }
 
             // Connect to SSE
@@ -480,6 +484,10 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
                 capped.forEach(function(trade) {
                     tradesList.appendChild(createTradeRow(trade));
                 });
+
+                if (window.zarabaBoneyard) {
+                    window.zarabaBoneyard.reveal('.recent-trades');
+                }
             }
 
             function prependTrade(trade) {
@@ -492,6 +500,10 @@ templ TradePageBody(symbol CoinMarketProps, tvSymbol string, walletBalance int64
 
                 while (tradesList.children.length > maxRows) {
                     tradesList.removeChild(tradesList.lastElementChild);
+                }
+
+                if (window.zarabaBoneyard) {
+                    window.zarabaBoneyard.reveal('.recent-trades');
                 }
             }
 

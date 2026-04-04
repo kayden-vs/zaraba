@@ -17,24 +17,6 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
         <link rel='stylesheet' href='/static/css/main.css'>
     </head>
     <body>
-        <!-- Page-transition loader -->
-        <div class="page-loader" id="page-loader">
-            <div class="loader-core">
-                <div class="loader-orbit"></div>
-                <div class="loader-orbit loader-orbit--inner"></div>
-                <svg class="loader-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="loader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#60A5FA"/>
-                            <stop offset="100%" stop-color="#3B82F6"/>
-                        </linearGradient>
-                    </defs>
-                    <path class="loader-logo__base" d="M 12 20 L 68 20 L 12 60 L 68 60" stroke="rgba(59,130,246,0.1)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path class="loader-logo__z" d="M 12 20 L 68 20 L 12 60 L 68 60" stroke="url(#loader-grad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <div class="loader-glow"></div>
-            </div>
-        </div>
         <div class="bg-pattern bg-pattern--dots bg-pattern--mask-fade-edges"></div>
         @partials.NavBar(isAuthenticated, csrfToken)
         <main class="animate-fade-in">
@@ -60,6 +42,212 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
         }
         <script>
         (function() {
+            var boneyard = (function() {
+                var registry = new Map();
+
+                function clamp(value, min, max) {
+                    return Math.max(min, Math.min(max, value));
+                }
+
+                function createFallbackBones(container) {
+                    var out = [];
+                    var width = container.clientWidth || 320;
+                    var y = 14;
+                    for (var i = 0; i < 8; i++) {
+                        var rowWidth = Math.max(120, Math.floor(width * (0.5 + Math.random() * 0.42)));
+                        out.push({
+                            x: 12,
+                            y: y,
+                            w: rowWidth,
+                            h: 12,
+                            r: 8,
+                            round: i % 3 === 0
+                        });
+                        y += 22;
+                    }
+                    return out;
+                }
+
+                function collectBones(container) {
+                    var rect = container.getBoundingClientRect();
+                    if (rect.width < 8 || rect.height < 8) {
+                        return [];
+                    }
+
+                    var nodes = container.querySelectorAll(
+                        'h1,h2,h3,h4,p,small,span,label,strong,b,a,button,input,th,td,.ft-row,.orderbook-row,.trade-row,.balance-card,.auth-field,.landing-feature-card,.landing-marquee__item'
+                    );
+
+                    var bones = [];
+                    for (var i = 0; i < nodes.length; i++) {
+                        var node = nodes[i];
+                        var box = node.getBoundingClientRect();
+                        if (box.width < 10 || box.height < 8) {
+                            continue;
+                        }
+                        if (box.width > rect.width * 0.96 && box.height > rect.height * 0.96) {
+                            continue;
+                        }
+                        var top = box.top - rect.top;
+                        var left = box.left - rect.left;
+
+                        bones.push({
+                            x: clamp(left, 0, rect.width - 8),
+                            y: clamp(top, 0, rect.height - 8),
+                            w: clamp(box.width, 20, rect.width - left),
+                            h: clamp(box.height, 10, 34),
+                            r: Math.min(10, Math.max(4, box.height / 2.5)),
+                            round: node.tagName === 'BUTTON' || node.tagName === 'INPUT'
+                        });
+
+                        if (bones.length >= 64) {
+                            break;
+                        }
+                    }
+
+                    return bones.length ? bones : createFallbackBones(container);
+                }
+
+                function mount(selector, options) {
+                    var cfg = options || {};
+                    var el = document.querySelector(selector);
+                    if (!el || registry.has(selector)) {
+                        return;
+                    }
+
+                    var bones = collectBones(el);
+                    if (!bones.length) {
+                        return;
+                    }
+
+                    el.classList.add('boneyard-zone');
+                    el.dataset.boneyardState = 'loading';
+
+                    var overlay = document.createElement('div');
+                    overlay.className = 'boneyard-overlay';
+
+                    bones.forEach(function(bone) {
+                        var n = document.createElement('span');
+                        n.className = 'boneyard-bone ' + (bone.round ? 'boneyard-bone--round' : 'boneyard-bone--soft');
+                        n.style.left = bone.x + 'px';
+                        n.style.top = bone.y + 'px';
+                        n.style.width = bone.w + 'px';
+                        n.style.height = bone.h + 'px';
+                        n.style.borderRadius = bone.r + 'px';
+                        overlay.appendChild(n);
+                    });
+
+                    el.appendChild(overlay);
+
+                    var entry = {
+                        el: el,
+                        overlay: overlay,
+                        fallbackTimer: null
+                    };
+                    registry.set(selector, entry);
+
+                    if (cfg.autoRevealDelay && cfg.autoRevealDelay > 0) {
+                        setTimeout(function() {
+                            reveal(selector);
+                        }, cfg.autoRevealDelay);
+                    }
+
+                    if (cfg.fallbackRevealDelay && cfg.fallbackRevealDelay > 0) {
+                        entry.fallbackTimer = setTimeout(function() {
+                            reveal(selector);
+                        }, cfg.fallbackRevealDelay);
+                    }
+                }
+
+                function reveal(selector) {
+                    var entry = registry.get(selector);
+                    if (!entry) {
+                        return;
+                    }
+
+                    if (entry.fallbackTimer) {
+                        clearTimeout(entry.fallbackTimer);
+                    }
+
+                    entry.el.dataset.boneyardState = 'ready';
+
+                    setTimeout(function() {
+                        if (entry.overlay && entry.overlay.parentNode) {
+                            entry.overlay.parentNode.removeChild(entry.overlay);
+                        }
+                        entry.el.classList.remove('boneyard-zone');
+                        delete entry.el.dataset.boneyardState;
+                        registry.delete(selector);
+                    }, 280);
+                }
+
+                function mountDefaults() {
+                    mount('.landing-hero__content', { autoRevealDelay: 720, fallbackRevealDelay: 2400 });
+                    mount('.landing-globe__canvas-wrap', { fallbackRevealDelay: 3600 });
+                    mount('.auth-form-section', { autoRevealDelay: 420, fallbackRevealDelay: 1600 });
+                    mount('.account-card', { autoRevealDelay: 340, fallbackRevealDelay: 1400 });
+                    mount('.wallet-container .balance-cards', { autoRevealDelay: 420, fallbackRevealDelay: 1600 });
+                    mount('.markets-container .ft-table', { autoRevealDelay: 380, fallbackRevealDelay: 1800 });
+                    mount('.tradingview-widget-container', { fallbackRevealDelay: 7000 });
+                    mount('.orderbook', { fallbackRevealDelay: 7000 });
+                    mount('.recent-trades', { fallbackRevealDelay: 7000 });
+                    mount('.nf-empty', { autoRevealDelay: 300, fallbackRevealDelay: 1200 });
+                }
+
+                function watchDynamicReadiness() {
+                    var tvWidget = document.querySelector('.tradingview-widget-container__widget');
+                    if (tvWidget) {
+                        var tvObserver = new MutationObserver(function() {
+                            if (tvWidget.querySelector('iframe')) {
+                                reveal('.tradingview-widget-container');
+                                tvObserver.disconnect();
+                            }
+                        });
+                        tvObserver.observe(tvWidget, { childList: true, subtree: true });
+                    }
+
+                    var globeCanvas = document.getElementById('globe-canvas');
+                    if (globeCanvas) {
+                        var unveilGlobe = function() {
+                            if (globeCanvas.width > 0 && globeCanvas.height > 0) {
+                                reveal('.landing-globe__canvas-wrap');
+                                return true;
+                            }
+                            return false;
+                        };
+
+                        if (!unveilGlobe()) {
+                            var globeChecks = 0;
+                            var globeTimer = setInterval(function() {
+                                globeChecks += 1;
+                                if (unveilGlobe() || globeChecks > 20) {
+                                    clearInterval(globeTimer);
+                                }
+                            }, 180);
+                        }
+                    }
+                }
+
+                return {
+                    mount: mount,
+                    reveal: reveal,
+                    mountDefaults: mountDefaults,
+                    watchDynamicReadiness: watchDynamicReadiness
+                };
+            })();
+
+            window.zarabaBoneyard = boneyard;
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    boneyard.mountDefaults();
+                    boneyard.watchDynamicReadiness();
+                });
+            } else {
+                boneyard.mountDefaults();
+                boneyard.watchDynamicReadiness();
+            }
+
             // Magnetic button effect
             var DISTANCE = 0.6;
             var wraps = document.querySelectorAll('.magnetic-wrap');
@@ -184,33 +372,6 @@ templ Base(title string, flash string, isAuthenticated bool, csrfToken string, b
                 });
             }
 
-            // Page-transition loader
-            var loader = document.getElementById('page-loader');
-            if (loader) {
-                // Show loader on internal navigation clicks
-                document.addEventListener('click', function(e) {
-                    var link = e.target.closest('a[href]');
-                    if (!link) return;
-                    var href = link.getAttribute('href');
-                    // Skip non-navigation links
-                    if (!href || href.startsWith('#') || href.startsWith('javascript') ||
-                        link.target === '_blank' || link.hasAttribute('download') ||
-                        e.ctrlKey || e.metaKey || e.shiftKey) return;
-                    // Skip external links
-                    if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
-                    loader.classList.add('is-active');
-                });
-
-                // Show loader on form submissions
-                document.addEventListener('submit', function() {
-                    loader.classList.add('is-active');
-                });
-
-                // Hide loader when navigating back/forward
-                window.addEventListener('pageshow', function() {
-                    loader.classList.remove('is-active');
-                });
-            }
         })();
         </script>
     </body>

@@ -28,6 +28,7 @@ type DemoLiquidityManager struct {
 	minLevels      int
 	spreadBps      float64
 	baseSize       float64
+	minSizeUnits   int64
 	basePriceUSD   float64
 	jitterPct      float64
 	cooldown       time.Duration
@@ -45,11 +46,17 @@ type DemoLiquidityManager struct {
 var demoLiquidity = newDemoLiquidityManager()
 
 func newDemoLiquidityManager() *DemoLiquidityManager {
+	minSizeUnits := engine.QuantityToInt(envFloat("DEMO_LIQ_MIN_SIZE", 0.001))
+	if minSizeUnits <= 0 {
+		minSizeUnits = 1
+	}
+
 	return &DemoLiquidityManager{
 		rng:            rand.New(rand.NewSource(time.Now().UnixNano())),
 		minLevels:      envInt("DEMO_LIQ_MIN_LEVELS", 5),
 		spreadBps:      envFloat("DEMO_LIQ_SPREAD_BPS", 12),
 		baseSize:       envFloat("DEMO_LIQ_BASE_SIZE", 0.003),
+		minSizeUnits:   minSizeUnits,
 		basePriceUSD:   envFloat("DEMO_LIQ_BASE_PRICE_USD", 74000),
 		jitterPct:      envFloat("DEMO_LIQ_JITTER_PCT", 0.25),
 		cooldown:       time.Duration(envInt("DEMO_LIQ_COOLDOWN_MS", 1500)) * time.Millisecond,
@@ -258,8 +265,8 @@ func (m *DemoLiquidityManager) injectDepthForSide(server *ExchangeServer, bid bo
 
 		// Add mild variability so depth does not look perfectly synthetic.
 		size := chunk + m.nextSize()/2
-		if size <= 0 {
-			size = chunk
+		if size < m.minSizeUnits {
+			size = m.minSizeUnits
 		}
 
 		orderBid := !bid
@@ -559,8 +566,8 @@ func (m *DemoLiquidityManager) nextSize() int64 {
 		size = m.baseSize
 	}
 	units := engine.QuantityToInt(size)
-	if units <= 0 {
-		return 1
+	if units < m.minSizeUnits {
+		return m.minSizeUnits
 	}
 	return units
 }

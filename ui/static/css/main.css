@@ -3222,6 +3222,73 @@ form:not(.auth-form):not(.header-logout-form) > div {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
+/* ==========================================================================
+   BONEYARD-STYLE SKELETON SYSTEM
+   Auto-generated bones that mirror live layout blocks before content is ready.
+   ========================================================================== */
+
+.boneyard-zone {
+  position: relative;
+}
+
+.boneyard-zone[data-boneyard-state="loading"] > :not(.boneyard-overlay) {
+  visibility: hidden;
+}
+
+.boneyard-zone[data-boneyard-state="ready"] > :not(.boneyard-overlay) {
+  visibility: visible;
+}
+
+.boneyard-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity var(--transition-slow);
+}
+
+.boneyard-zone[data-boneyard-state="ready"] .boneyard-overlay {
+  opacity: 0;
+}
+
+.boneyard-bone {
+  position: absolute;
+  background: linear-gradient(
+    100deg,
+    rgba(165, 173, 186, 0.09) 20%,
+    rgba(165, 173, 186, 0.18) 42%,
+    rgba(165, 173, 186, 0.09) 64%
+  );
+  background-size: 220% 100%;
+  animation: boneyard-wave 1.3s linear infinite;
+  box-shadow: inset 0 0 0 1px rgba(232, 236, 242, 0.03);
+}
+
+.boneyard-bone--soft {
+  border-radius: var(--radius-md);
+}
+
+.boneyard-bone--round {
+  border-radius: 9999px;
+}
+
+@keyframes boneyard-wave {
+  0% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boneyard-bone {
+    animation: none;
+    background: rgba(165, 173, 186, 0.14);
+  }
+}
+
 /* Bounce */
 @keyframes bounce {
   0%, 100% {
@@ -3234,106 +3301,6 @@ form:not(.auth-form):not(.header-logout-form) > div {
 
 .animate-bounce {
   animation: bounce 0.6s ease-in-out;
-}
-
-/* ==========================================================================
-   ZARABA VAULT LOADER
-   Brand-centric page transition — Z stroke draw, orbital rings, glow pulse
-   ========================================================================== */
-
-.page-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.75rem;
-  background: radial-gradient(ellipse at center, rgba(22, 28, 38, 0.97), rgba(10, 13, 18, 0.99) 70%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.page-loader.is-active {
-  display: flex;
-}
-
-/* --- Core container (logo + rings) --- */
-.loader-core {
-  position: relative;
-  width: 130px;
-  height: 130px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --- Orbital rings --- */
-.loader-orbit {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid transparent;
-  border-top-color: rgba(59, 130, 246, 0.7);
-  border-right-color: rgba(59, 130, 246, 0.15);
-  animation: loader-spin 2s linear infinite;
-  will-change: transform;
-}
-
-.loader-orbit--inner {
-  inset: 10px;
-  border-top-color: rgba(59, 130, 246, 0.6);
-  border-right-color: rgba(59, 130, 246, 0.12);
-  border-left-color: transparent;
-  border-bottom-color: transparent;
-  animation: loader-spin 3s linear infinite reverse;
-}
-
-/* --- Z Logo SVG --- */
-.loader-logo {
-  width: 56px;
-  height: 56px;
-  z-index: 2;
-  filter: drop-shadow(0 0 14px rgba(59, 130, 246, 0.35));
-}
-
-.loader-logo__base {
-  opacity: 1;
-}
-
-.loader-logo__z {
-  stroke-dasharray: 185;
-  stroke-dashoffset: 185;
-  animation: z-stream 2.2s ease-in-out infinite;
-}
-
-/* --- Glow pulse behind logo --- */
-.loader-glow {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 70%);
-  animation: loader-glow-pulse 2.5s ease-in-out infinite;
-  z-index: 1;
-}
-
-/* --- Keyframes --- */
-@keyframes loader-spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes z-stream {
-  0%   { stroke-dashoffset: 185; }
-  40%  { stroke-dashoffset: 0; }
-  60%  { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -185; }
-}
-
-@keyframes loader-glow-pulse {
-  0%, 100% { transform: scale(1);   opacity: 0.25; }
-  50%      { transform: scale(1.5); opacity: 0.06; }
 }
 
 /* Entry animations for page elements */
