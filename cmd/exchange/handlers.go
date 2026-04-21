@@ -498,31 +498,85 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 		Timestamp: time.Now().UnixNano(),
 	}}
 
+	initialPrice := bestAsk
+	if !bid {
+		if sellBestBid, err := app.bestPrice(true); err == nil {
+			initialPrice = sellBestBid
+		}
+	}
+
+	orderID, err := app.orders.Create(&models.Order{
+		UserID:         int64(userID),
+		EngineOrderID:  order.Id,
+		Symbol:         symbol,
+		Side:           orderSide(bid),
+		OrderType:      models.OrderTypeMarket,
+		Price:          initialPrice,
+		Quantity:       size,
+		Filled:         0,
+		FilledNotional: 0,
+		Status:         models.OrderStatusOpen,
+	})
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	match, err := app.safePlaceMarketOrder(r.Context(), order.Order)
 	if err != nil {
+		_ = app.orders.DeleteByEngineOrderID(int64(userID), order.Id)
 		app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if bid {
-		executedNotional := int64(0)
-		if match != nil && match.SizeFilled > 0 && match.Price > 0 {
-			executedNotional = engine.CalculateNotionalInt(match.Price, match.SizeFilled)
-		}
+	filled := size
+	if match != nil && match.SizeFilled > 0 {
+		filled = match.SizeFilled
+	}
+	if filled < 0 {
+		filled = 0
+	}
+	if filled > size {
+		filled = size
+	}
 
+	executionPrice := initialPrice
+	if match != nil && match.Price > 0 {
+		executionPrice = match.Price
+	}
+
+	executedNotional := int64(0)
+	if executionPrice > 0 && filled > 0 {
+		executedNotional = engine.CalculateNotionalInt(executionPrice, filled)
+	}
+
+	status := models.OrderStatusFilled
+	if filled == 0 {
+		status = models.OrderStatusCancelled
+	} else if filled < size {
+		status = models.OrderStatusPartiallyFilled
+	}
+
+	if bid {
 		if executedNotional <= 0 {
-			executedNotional = engine.CalculateNotionalInt(bestAsk, size)
+			executedNotional = engine.CalculateNotionalInt(bestAsk, filled)
 		}
 
 		if _, err = app.wallet.DebitWallet(int64(userID), executedNotional); err != nil {
+			_ = app.orders.UpdateExecution(orderID, filled, executedNotional, status)
 			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 			return
 		}
 	}
 
+	if err = app.orders.UpdateExecution(orderID, filled, executedNotional, status); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	message := "market order accepted"
-	if match != nil && match.SizeFilled > 0 {
-		message = fmt.Sprintf("market order filled %s at %s", engine.FormatQuantity(match.SizeFilled), engine.FormatPrice(match.Price))
+	if filled > 0 {
+		message = fmt.Sprintf("market order filled %s at %s", engine.FormatQuantity(filled), engine.FormatPrice(executionPrice))
 	}
 
 	app.respondOrderSuccess(w, r, symbol, message, match)
@@ -572,8 +626,29 @@ func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
+	orderID, err := app.orders.Create(&models.Order{
+		UserID:         int64(userID),
+		EngineOrderID:  order.Id,
+		Symbol:         symbol,
+		Side:           orderSide(bid),
+		OrderType:      models.OrderTypeLimit,
+		Price:          price,
+		Quantity:       originalSize,
+		Filled:         0,
+		FilledNotional: 0,
+		Status:         models.OrderStatusOpen,
+	})
+	if err != nil {
+		if bid && lockedNotional > 0 {
+			_, _ = app.wallet.UnlockAmount(int64(userID), lockedNotional)
+		}
+		app.serverError(w, err)
+		return
+	}
+
 	match, err := app.exchangeServer.PlaceLimitOrder(r.Context(), &pb.PlaceLimitOrderRequest{Price: price, Order: order})
 	if err != nil {
+		_ = app.orders.DeleteByEngineOrderID(int64(userID), order.Id)
 		if bid && lockedNotional > 0 {
 			_, _ = app.wallet.UnlockAmount(int64(userID), lockedNotional)
 		}
@@ -581,30 +656,57 @@ func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if bid {
-		filledSize := originalSize - order.Size
-		if match != nil && match.SizeFilled > 0 {
-			filledSize = match.SizeFilled
+	filledSize := originalSize - order.Size
+	if filledSize < 0 {
+		filledSize = 0
+	}
+	if filledSize > originalSize {
+		filledSize = originalSize
+	}
+	if match != nil && match.SizeFilled > filledSize {
+		filledSize = match.SizeFilled
+		if filledSize > originalSize {
+			filledSize = originalSize
 		}
+	}
 
+	executionPrice := price
+	if match != nil && match.Price > 0 {
+		executionPrice = match.Price
+	}
+
+	executedNotional := int64(0)
+	if filledSize > 0 && executionPrice > 0 {
+		executedNotional = engine.CalculateNotionalInt(executionPrice, filledSize)
+	}
+
+	status := models.OrderStatusOpen
+	if order.Size == 0 {
+		status = models.OrderStatusFilled
+	} else if filledSize > 0 {
+		status = models.OrderStatusPartiallyFilled
+	}
+
+	if bid {
 		if filledSize > 0 {
-			executionPrice := order.Price
-			if match != nil && match.Price > 0 {
-				executionPrice = match.Price
-			}
-
-			executedNotional := engine.CalculateNotionalInt(executionPrice, filledSize)
 			if _, err = app.wallet.DebitWallet(int64(userID), executedNotional); err != nil {
 				_, _ = app.wallet.UnlockAmount(int64(userID), lockedNotional)
+				_ = app.orders.UpdateExecution(orderID, filledSize, executedNotional, status)
 				app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 				return
 			}
 
 			if _, err = app.wallet.UnlockAmount(int64(userID), executedNotional); err != nil {
+				_ = app.orders.UpdateExecution(orderID, filledSize, executedNotional, status)
 				app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 				return
 			}
 		}
+	}
+
+	if err = app.orders.UpdateExecution(orderID, filledSize, executedNotional, status); err != nil {
+		app.serverError(w, err)
+		return
 	}
 
 	message := fmt.Sprintf("limit order placed at %s for %s", engine.FormatPrice(price), engine.FormatQuantity(size))
@@ -794,4 +896,429 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func (app *application) OrdersHandler(w http.ResponseWriter, r *http.Request) {
+	userID := int64(app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+	if userID == 0 {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	if err := app.syncUserOpenOrders(userID); err != nil {
+		app.errorLog.Printf("orders sync failed for user %d: %v", userID, err)
+	}
+
+	allOrders, err := app.orders.ListByUser(userID, nil, 500)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	tab, statusFilter := normalizeOrdersTab(r.URL.Query().Get("tab"))
+	priceBySymbol, pairBySymbol := app.marketMetadata()
+
+	rows := make([]pages.OrderRowProps, 0, len(allOrders))
+	summary := pages.OrderSummaryProps{TotalOrders: len(allOrders)}
+
+	for _, order := range allOrders {
+		status := strings.ToUpper(strings.TrimSpace(order.Status))
+		switch status {
+		case models.OrderStatusOpen, models.OrderStatusPartiallyFilled:
+			summary.ActiveOrders++
+		case models.OrderStatusFilled:
+			summary.FilledOrders++
+		case models.OrderStatusCancelled:
+			summary.CancelledOrders++
+		}
+
+		summary.TotalFilledNotional += order.FilledNotional
+
+		lastPrice := priceBySymbol[strings.ToLower(order.Symbol)]
+		pnlValue, pnlPct, hasPnL := calculateUnrealizedPnL(order, lastPrice)
+		if hasPnL {
+			summary.TotalUnrealizedPnL += pnlValue
+		}
+
+		if !matchesStatusFilter(status, statusFilter) {
+			continue
+		}
+
+		rows = append(rows, pages.OrderRowProps{
+			ID:               order.ID,
+			EngineOrderID:    order.EngineOrderID,
+			Pair:             formatOrderPair(order.Symbol, pairBySymbol),
+			Symbol:           strings.ToUpper(order.Symbol),
+			Side:             strings.ToUpper(order.Side),
+			OrderType:        strings.ToUpper(order.OrderType),
+			Status:           status,
+			Price:            order.Price,
+			Quantity:         order.Quantity,
+			Filled:           order.Filled,
+			Remaining:        order.Remaining(),
+			FillPercent:      filledPercent(order.Filled, order.Quantity),
+			FilledNotional:   order.FilledNotional,
+			AvgFillPrice:     order.AvgFillPrice,
+			LastPrice:        lastPrice,
+			UnrealizedPnL:    pnlValue,
+			UnrealizedPnLPct: pnlPct,
+			HasPnL:           hasPnL,
+			CreatedAt:        order.CreatedAt,
+			UpdatedAt:        order.UpdatedAt,
+			CanCancel:        canCancelOrder(order),
+		})
+	}
+
+	props := pages.OrdersPageProps{
+		ActiveTab: tab,
+		Orders:    rows,
+		Summary:   summary,
+	}
+
+	app.RenderPage(w, r, func(flash string, isAuthenticated bool, csrfToken string) templ.Component {
+		return pages.OrdersPage(props, flash, isAuthenticated, csrfToken)
+	})
+}
+
+func (app *application) CancelOrderPost(w http.ResponseWriter, r *http.Request) {
+	userID := int64(app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+	if userID == 0 {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	orderID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || orderID <= 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if err = app.syncUserOpenOrders(userID); err != nil {
+		app.errorLog.Printf("pre-cancel sync failed for user %d order %d: %v", userID, orderID, err)
+	}
+
+	order, err := app.orders.GetByIDForUser(orderID, userID)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w, r)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	if !canCancelOrder(order) {
+		app.sessionManager.Put(r.Context(), "flash", "error:order can no longer be cancelled")
+		http.Redirect(w, r, "/orders?tab=active", http.StatusSeeOther)
+		return
+	}
+
+	cancelled, ok := app.exchangeServer.CancelOrderByID(order.EngineOrderID)
+	if !ok {
+		_ = app.syncUserOpenOrders(userID)
+		app.sessionManager.Put(r.Context(), "flash", "error:order is no longer active")
+		http.Redirect(w, r, "/orders?tab=active", http.StatusSeeOther)
+		return
+	}
+
+	if order.IsBuy() && order.Price > 0 {
+		releaseQty := order.Remaining()
+		if cancelled != nil && cancelled.Size > 0 && cancelled.Size < releaseQty {
+			releaseQty = cancelled.Size
+		}
+		if releaseQty > 0 {
+			releaseNotional := engine.CalculateNotionalInt(order.Price, releaseQty)
+			if err = app.unlockWalletUpTo(userID, releaseNotional); err != nil {
+				app.serverError(w, err)
+				return
+			}
+		}
+	}
+
+	if err = app.orders.MarkCancelled(order.ID); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("success:Order #%d cancelled", order.ID))
+	http.Redirect(w, r, "/orders?tab=active", http.StatusSeeOther)
+}
+
+func (app *application) syncUserOpenOrders(userID int64) error {
+	if userID == 0 {
+		return nil
+	}
+
+	openOrders, err := app.orders.ListOpenByUser(userID)
+	if err != nil {
+		return err
+	}
+	if len(openOrders) == 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	snapshot, err := app.exchangeServer.StreamOrderBook(ctx, &pb.OrderBookRequest{Market: "default"})
+	if err != nil {
+		return err
+	}
+
+	remainingByID := orderbookRemainingByID(snapshot)
+
+	for _, order := range openOrders {
+		if order.EngineOrderID == 0 {
+			continue
+		}
+
+		remaining := int64(0)
+		if v, ok := remainingByID[order.EngineOrderID]; ok {
+			remaining = v
+		}
+		if remaining < 0 {
+			remaining = 0
+		}
+		if remaining > order.Quantity {
+			remaining = order.Quantity
+		}
+
+		newFilled := order.Quantity - remaining
+		if newFilled < 0 {
+			newFilled = 0
+		}
+		if newFilled > order.Quantity {
+			newFilled = order.Quantity
+		}
+		if newFilled < order.Filled {
+			newFilled = order.Filled
+		}
+
+		fillDelta := newFilled - order.Filled
+		newFilledNotional := order.FilledNotional
+
+		if fillDelta > 0 && order.Price > 0 {
+			deltaNotional := engine.CalculateNotionalInt(order.Price, fillDelta)
+			if order.IsBuy() && deltaNotional > 0 {
+				if _, err = app.wallet.DebitWallet(userID, deltaNotional); err != nil {
+					app.errorLog.Printf("wallet debit sync failed (user=%d order=%d): %v", userID, order.ID, err)
+					continue
+				}
+				if err = app.unlockWalletUpTo(userID, deltaNotional); err != nil {
+					app.errorLog.Printf("wallet unlock sync failed (user=%d order=%d): %v", userID, order.ID, err)
+					continue
+				}
+			}
+			newFilledNotional += deltaNotional
+		}
+
+		status := statusFromProgress(order.Quantity, newFilled)
+		if status == models.OrderStatusOpen && newFilled > 0 {
+			status = models.OrderStatusPartiallyFilled
+		}
+
+		if newFilled == order.Filled && newFilledNotional == order.FilledNotional && status == order.Status {
+			continue
+		}
+
+		if err = app.orders.UpdateExecution(order.ID, newFilled, newFilledNotional, status); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (app *application) marketMetadata() (map[string]int64, map[string]string) {
+	prices := make(map[string]int64)
+	pairs := make(map[string]string)
+
+	markets, err := app.fetchCoinMarket()
+	if err != nil {
+		return prices, pairs
+	}
+
+	for _, market := range markets {
+		symbolID := strings.ToLower(strings.TrimSpace(market.ID))
+		if symbolID == "" {
+			continue
+		}
+
+		prices[symbolID] = engine.PriceToInt(market.Price)
+
+		ticker := strings.ToUpper(strings.TrimSpace(market.Symbol))
+		if ticker != "" {
+			pairs[symbolID] = ticker + "/USDT"
+		}
+	}
+
+	return prices, pairs
+}
+
+func orderbookRemainingByID(snapshot *pb.OrderbookSnapshot) map[int64]int64 {
+	remainingByID := make(map[int64]int64)
+	if snapshot == nil {
+		return remainingByID
+	}
+
+	for _, limit := range snapshot.Asks {
+		for _, order := range limit.Orders {
+			remainingByID[order.Id] = order.Size
+		}
+	}
+
+	for _, limit := range snapshot.Bids {
+		for _, order := range limit.Orders {
+			remainingByID[order.Id] = order.Size
+		}
+	}
+
+	return remainingByID
+}
+
+func filledPercent(filled, quantity int64) float64 {
+	if quantity <= 0 {
+		return 0
+	}
+	pct := (float64(filled) / float64(quantity)) * 100
+	if pct < 0 {
+		return 0
+	}
+	if pct > 100 {
+		return 100
+	}
+	return pct
+}
+
+func calculateUnrealizedPnL(order *models.Order, lastPrice int64) (int64, float64, bool) {
+	if order == nil || order.Filled <= 0 || lastPrice <= 0 {
+		return 0, 0, false
+	}
+
+	entryPrice := order.AvgFillPrice
+	if entryPrice <= 0 && order.FilledNotional > 0 {
+		entryPrice = int64(math.Round((float64(order.FilledNotional) / float64(order.Filled)) * float64(engine.QuantityScale)))
+	}
+	if entryPrice <= 0 {
+		entryPrice = order.Price
+	}
+	if entryPrice <= 0 {
+		return 0, 0, false
+	}
+
+	entryNotional := engine.CalculateNotionalInt(entryPrice, order.Filled)
+	markNotional := engine.CalculateNotionalInt(lastPrice, order.Filled)
+	if entryNotional <= 0 {
+		return 0, 0, false
+	}
+
+	pnl := markNotional - entryNotional
+	if !order.IsBuy() {
+		pnl = entryNotional - markNotional
+	}
+
+	pct := (float64(pnl) / float64(entryNotional)) * 100
+	return pnl, pct, true
+}
+
+func normalizeOrdersTab(raw string) (string, map[string]bool) {
+	tab := strings.ToLower(strings.TrimSpace(raw))
+	switch tab {
+	case "completed":
+		return "completed", map[string]bool{
+			models.OrderStatusFilled:    true,
+			models.OrderStatusCancelled: true,
+		}
+	case "all":
+		return "all", nil
+	default:
+		return "active", map[string]bool{
+			models.OrderStatusOpen:            true,
+			models.OrderStatusPartiallyFilled: true,
+		}
+	}
+}
+
+func matchesStatusFilter(status string, filter map[string]bool) bool {
+	if len(filter) == 0 {
+		return true
+	}
+	return filter[status]
+}
+
+func statusFromProgress(quantity, filled int64) string {
+	if quantity <= 0 {
+		return models.OrderStatusOpen
+	}
+	if filled >= quantity {
+		return models.OrderStatusFilled
+	}
+	if filled > 0 {
+		return models.OrderStatusPartiallyFilled
+	}
+	return models.OrderStatusOpen
+}
+
+func formatOrderPair(symbol string, pairBySymbol map[string]string) string {
+	key := strings.ToLower(strings.TrimSpace(symbol))
+	if pair, ok := pairBySymbol[key]; ok && pair != "" {
+		return pair
+	}
+
+	upper := strings.ToUpper(strings.TrimSpace(symbol))
+	if strings.HasSuffix(upper, "USDT") && len(upper) > len("USDT") {
+		return upper[:len(upper)-len("USDT")] + "/USDT"
+	}
+
+	if upper == "" {
+		return "UNKNOWN/USDT"
+	}
+
+	return upper + "/USDT"
+}
+
+func orderSide(bid bool) string {
+	if bid {
+		return models.OrderSideBuy
+	}
+	return models.OrderSideSell
+}
+
+func canCancelOrder(order *models.Order) bool {
+	if order == nil {
+		return false
+	}
+	if order.EngineOrderID == 0 {
+		return false
+	}
+	if !strings.EqualFold(order.OrderType, models.OrderTypeLimit) {
+		return false
+	}
+	status := strings.ToUpper(strings.TrimSpace(order.Status))
+	if status != models.OrderStatusOpen && status != models.OrderStatusPartiallyFilled {
+		return false
+	}
+	return order.Remaining() > 0
+}
+
+func (app *application) unlockWalletUpTo(userID, amount int64) error {
+	if amount <= 0 {
+		return nil
+	}
+
+	wallet, err := app.wallet.GetWallet(userID)
+	if err != nil {
+		return err
+	}
+
+	unlockAmount := amount
+	if wallet.Locked < unlockAmount {
+		unlockAmount = wallet.Locked
+	}
+	if unlockAmount <= 0 {
+		return nil
+	}
+
+	_, err = app.wallet.UnlockAmount(userID, unlockAmount)
+	return err
 }

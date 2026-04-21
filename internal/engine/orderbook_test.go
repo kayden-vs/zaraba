@@ -115,6 +115,37 @@ func TestCancelOrder(t *testing.T) {
 	assert(t, ob.BidTotalVolume(), int64(5))
 }
 
+func TestCancelOrderByID(t *testing.T) {
+	ob := NewOrderbook()
+	buyOrderA := NewOrder(true, 10)
+	buyOrderA.Id = 101
+	buyOrderB := NewOrder(true, 5)
+	buyOrderB.Id = 102
+
+	ob.PlaceLimitOrder(1000, buyOrderA)
+	ob.PlaceLimitOrder(1000, buyOrderB)
+
+	cancelled, ok := ob.CancelOrderByID(101)
+	assert(t, ok, true)
+	assert(t, cancelled.Id, int64(101))
+	assert(t, cancelled.Size, int64(10))
+	assert(t, ob.BidTotalVolume(), int64(5))
+	assert(t, len(ob.Bids), 1)
+}
+
+func TestCancelOrderByIDClearsEmptyLimit(t *testing.T) {
+	ob := NewOrderbook()
+	askOrder := NewOrder(false, 7)
+	askOrder.Id = 201
+
+	ob.PlaceLimitOrder(1200, askOrder)
+
+	_, ok := ob.CancelOrderByID(201)
+	assert(t, ok, true)
+	assert(t, len(ob.Asks), 0)
+	assert(t, ob.AskTotalVolume(), int64(0))
+}
+
 func TestPlaceLimitOrderCrossesAndRestsRemainder(t *testing.T) {
 	ob := NewOrderbook()
 

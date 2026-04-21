@@ -287,7 +287,64 @@ func (ob *Orderbook) CancelOrder(o *Order) {
 	}
 	if limit != nil {
 		limit.DeleteOrder(o)
+		if len(limit.Orders) == 0 {
+			ob.clearLimit(o.Bid, limit)
+		}
 	}
+}
+
+func (ob *Orderbook) CancelOrderByID(orderID int64) (*pb.Order, bool) {
+	if orderID == 0 {
+		return nil, false
+	}
+
+	for _, limit := range ob.Bids {
+		for i := 0; i < len(limit.Orders); i++ {
+			if limit.Orders[i].Id != orderID {
+				continue
+			}
+
+			cancelled := limit.Orders[i]
+			limit.TotalVolume -= cancelled.Size
+			limit.Orders = append(limit.Orders[:i], limit.Orders[i+1:]...)
+			if len(limit.Orders) == 0 {
+				ob.clearLimit(true, limit)
+			}
+
+			return &pb.Order{
+				Id:        cancelled.Id,
+				Price:     cancelled.Price,
+				Size:      cancelled.Size,
+				Bid:       cancelled.Bid,
+				Timestamp: cancelled.Timestamp,
+			}, true
+		}
+	}
+
+	for _, limit := range ob.Asks {
+		for i := 0; i < len(limit.Orders); i++ {
+			if limit.Orders[i].Id != orderID {
+				continue
+			}
+
+			cancelled := limit.Orders[i]
+			limit.TotalVolume -= cancelled.Size
+			limit.Orders = append(limit.Orders[:i], limit.Orders[i+1:]...)
+			if len(limit.Orders) == 0 {
+				ob.clearLimit(false, limit)
+			}
+
+			return &pb.Order{
+				Id:        cancelled.Id,
+				Price:     cancelled.Price,
+				Size:      cancelled.Size,
+				Bid:       cancelled.Bid,
+				Timestamp: cancelled.Timestamp,
+			}, true
+		}
+	}
+
+	return nil, false
 }
 
 func (ob *Orderbook) BidTotalVolume() int64 {

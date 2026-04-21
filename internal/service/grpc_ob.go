@@ -138,3 +138,15 @@ func (s *ExchangeServer) StreamOrderBook(ctx context.Context, req *pb.OrderBookR
 	snapshot := s.orderbook.GetSnapshot()
 	return snapshot, nil
 }
+
+func (s *ExchangeServer) CancelOrderByID(orderID int64) (*pb.Order, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	cancelled, ok := s.orderbook.CancelOrderByID(orderID)
+	if ok {
+		go BroadcastOrderBook(s)
+	}
+
+	return cancelled, ok
+}

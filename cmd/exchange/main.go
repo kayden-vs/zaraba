@@ -27,6 +27,7 @@ type application struct {
 	formDecoder    *form.Decoder
 	users          models.UserModelInterface
 	wallet         models.WalletModelInterface
+	orders         models.OrderModelInterface
 	sessionManager *scs.SessionManager
 	exchangeServer *service.ExchangeServer
 }
@@ -74,12 +75,18 @@ func main() {
 		infoLog.Printf("warning: CSRF_SECURE_COOKIE is not true; set CSRF_SECURE_COOKIE=true in production")
 	}
 
+	orderModel := &models.OrderModel{DB: db}
+	if err := orderModel.EnsureSchema(); err != nil {
+		errorLog.Fatal(err)
+	}
+
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		formDecoder:    formDecoder,
 		users:          &models.UserModel{DB: db},
 		wallet:         &models.WalletModel{DB: db},
+		orders:         orderModel,
 		sessionManager: sessionManager,
 	}
 

@@ -2767,7 +2767,259 @@ form:not(.auth-form):not(.header-logout-form) > div {
 }
 
 /* ==========================================================================
-   16. ACCOUNT PAGE
+   16. ORDERS PAGE
+   ========================================================================== */
+
+.orders-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.orders-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.orders-header h1 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-1);
+}
+
+.orders-header p {
+  color: var(--text-tertiary);
+  max-width: 720px;
+}
+
+.orders-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.orders-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+
+.orders-summary-card:hover {
+  border-color: var(--border-secondary);
+}
+
+.orders-summary-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+}
+
+.orders-summary-value {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.orders-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border: 1px solid var(--border-primary);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.orders-tab {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-fast);
+}
+
+.orders-tab:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.orders-tab.is-active {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+}
+
+.orders-table-wrap {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  overflow: auto;
+}
+
+.orders-table {
+  width: 100%;
+  min-width: 1560px;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.orders-pair-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.orders-pair {
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.orders-id {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.orders-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  letter-spacing: var(--tracking-wide);
+}
+
+.orders-chip--buy {
+  color: var(--color-buy);
+  background-color: var(--color-buy-subtle);
+  border-color: var(--color-buy-muted);
+}
+
+.orders-chip--sell {
+  color: var(--color-sell);
+  background-color: var(--color-sell-subtle);
+  border-color: var(--color-sell-muted);
+}
+
+.orders-chip--limit {
+  color: var(--accent-primary);
+  background-color: var(--accent-primary-muted);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.orders-chip--market {
+  color: var(--accent-sky);
+  background-color: rgba(96, 165, 250, 0.12);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.orders-chip--open {
+  color: var(--accent-secondary);
+  background-color: rgba(96, 165, 250, 0.12);
+  border-color: rgba(96, 165, 250, 0.28);
+}
+
+.orders-chip--partial {
+  color: var(--color-neutral);
+  background-color: var(--color-neutral-muted);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.orders-chip--filled {
+  color: var(--color-buy);
+  background-color: var(--color-buy-subtle);
+  border-color: rgba(22, 199, 132, 0.35);
+}
+
+.orders-chip--cancelled {
+  color: var(--text-tertiary);
+  background-color: rgba(139, 146, 160, 0.14);
+  border-color: rgba(139, 146, 160, 0.28);
+}
+
+.orders-filled-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orders-fill-track {
+  width: 132px;
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.orders-fill-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+
+.orders-pnl-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.orders-pnl-positive {
+  color: var(--color-buy);
+}
+
+.orders-pnl-negative {
+  color: var(--color-sell);
+}
+
+.orders-pnl-neutral {
+  color: var(--text-secondary);
+}
+
+.orders-dash {
+  color: var(--text-muted);
+}
+
+.orders-cancel-form {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  max-width: none;
+}
+
+.orders-empty {
+  padding: var(--space-12) var(--space-8);
+  text-align: center;
+  border: 1px dashed var(--border-secondary);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(17, 22, 29, 0.7) 0%, rgba(17, 22, 29, 0.4) 100%);
+}
+
+.orders-empty h3 {
+  margin-bottom: var(--space-2);
+}
+
+.orders-empty p {
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-5);
+}
+
+/* ==========================================================================
+   17. ACCOUNT PAGE
    ========================================================================== */
 
 .account-container {
@@ -2829,7 +3081,7 @@ form:not(.auth-form):not(.header-logout-form) > div {
 }
 
 /* ==========================================================================
-   17. UTILITY CLASSES
+  18. UTILITY CLASSES
    ========================================================================== */
 
 /* Display */
@@ -2950,7 +3202,7 @@ form:not(.auth-form):not(.header-logout-form) > div {
 .cursor-not-allowed { cursor: not-allowed; }
 
 /* ==========================================================================
-   18. RESPONSIVE DESIGN
+  19. RESPONSIVE DESIGN
    ========================================================================== */
 
 /* Large screens (desktops) */
@@ -2994,6 +3246,10 @@ form:not(.auth-form):not(.header-logout-form) > div {
   
   .balance-cards {
     grid-template-columns: 1fr;
+  }
+
+  .orders-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -3061,6 +3317,25 @@ form:not(.auth-form):not(.header-logout-form) > div {
   .wallet-actions {
     flex-direction: column;
   }
+
+  .orders-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .orders-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orders-tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .orders-tab {
+    flex: 1;
+    text-align: center;
+  }
   
   form:not(.auth-form) {
     padding: var(--space-5);
@@ -3096,7 +3371,7 @@ form:not(.auth-form):not(.header-logout-form) > div {
 }
 
 /* ==========================================================================
-   19. ANIMATIONS
+  20. ANIMATIONS
    ========================================================================== */
 
 /* Fade in */
