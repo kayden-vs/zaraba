@@ -30,6 +30,7 @@ type application struct {
 	orders         models.OrderModelInterface
 	sessionManager *scs.SessionManager
 	exchangeServer *service.ExchangeServer
+	startedAt      time.Time
 }
 
 func main() {
@@ -88,6 +89,7 @@ func main() {
 		wallet:         &models.WalletModel{DB: db},
 		orders:         orderModel,
 		sessionManager: sessionManager,
+		startedAt:      time.Now(),
 	}
 
 	srv := &http.Server{

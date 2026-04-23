@@ -471,7 +471,10 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	var bestAsk int64
+	var (
+		bestAsk              int64
+		estimatedBuyNotional int64
+	)
 	if bid {
 		wallet, err := app.wallet.GetWallet(int64(userID))
 		if err != nil {
@@ -479,13 +482,14 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		bestAsk, err = app.bestPrice(false)
+		bestAsk, estimatedBuyNotional, err = app.marketBuyQuote(size)
 		if err != nil {
 			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		if !wallet.HasEnoughBalance(bestAsk, size) {
+		available := wallet.Balance - wallet.Locked
+		if available < estimatedBuyNotional {
 			app.respondOrderError(w, r, symbol, http.StatusBadRequest, "insufficient wallet balance for this market buy")
 			return
 		}
@@ -529,12 +533,12 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	filled := size
-	if match != nil && match.SizeFilled > 0 {
-		filled = match.SizeFilled
-	}
+	filled := size - order.Order.Size
 	if filled < 0 {
 		filled = 0
+	}
+	if match != nil && match.SizeFilled > filled {
+		filled = match.SizeFilled
 	}
 	if filled > size {
 		filled = size
@@ -559,12 +563,15 @@ func (app *application) PlaceMarketOrderPost(w http.ResponseWriter, r *http.Requ
 
 	if bid {
 		if executedNotional <= 0 {
+			executedNotional = estimatedBuyNotional
+		}
+		if executedNotional <= 0 {
 			executedNotional = engine.CalculateNotionalInt(bestAsk, filled)
 		}
 
 		if _, err = app.wallet.DebitWallet(int64(userID), executedNotional); err != nil {
 			_ = app.orders.UpdateExecution(orderID, filled, executedNotional, status)
-			app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
+			app.serverError(w, fmt.Errorf("market buy settlement failed: %w", err))
 			return
 		}
 	}
@@ -689,14 +696,16 @@ func (app *application) PlaceLimitOrderPost(w http.ResponseWriter, r *http.Reque
 
 	if bid {
 		if filledSize > 0 {
+			lockedFilledNotional := engine.CalculateNotionalInt(price, filledSize)
+
 			if _, err = app.wallet.DebitWallet(int64(userID), executedNotional); err != nil {
-				_, _ = app.wallet.UnlockAmount(int64(userID), lockedNotional)
+				_ = app.unlockWalletUpTo(int64(userID), lockedNotional)
 				_ = app.orders.UpdateExecution(orderID, filledSize, executedNotional, status)
 				app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 				return
 			}
 
-			if _, err = app.wallet.UnlockAmount(int64(userID), executedNotional); err != nil {
+			if err = app.unlockWalletUpTo(int64(userID), lockedFilledNotional); err != nil {
 				_ = app.orders.UpdateExecution(orderID, filledSize, executedNotional, status)
 				app.respondOrderError(w, r, symbol, http.StatusBadRequest, err.Error())
 				return
@@ -782,6 +791,51 @@ func (app *application) bestPrice(bid bool) (int64, error) {
 	}
 
 	return snapshot.Asks[0].Price, nil
+}
+
+func (app *application) marketBuyQuote(size int64) (int64, int64, error) {
+	if size <= 0 {
+		return 0, 0, fmt.Errorf("invalid size")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	snapshot, err := app.exchangeServer.StreamOrderBook(ctx, &pb.OrderBookRequest{Market: "default"})
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to read orderbook snapshot")
+	}
+
+	if len(snapshot.Asks) == 0 {
+		return 0, 0, fmt.Errorf("no ask liquidity")
+	}
+
+	bestAsk := snapshot.Asks[0].Price
+	remaining := size
+	totalNotional := int64(0)
+
+	for _, level := range snapshot.Asks {
+		if remaining <= 0 {
+			break
+		}
+		if level == nil || level.Price <= 0 || level.TotalVolume <= 0 {
+			continue
+		}
+
+		take := level.TotalVolume
+		if take > remaining {
+			take = remaining
+		}
+
+		totalNotional += engine.CalculateNotionalInt(level.Price, take)
+		remaining -= take
+	}
+
+	if remaining > 0 {
+		return 0, 0, fmt.Errorf("not enough depth for market order")
+	}
+
+	return bestAsk, totalNotional, nil
 }
 
 func (app *application) safePlaceMarketOrder(ctx context.Context, order *pb.Order) (match *pb.Match, err error) {
@@ -930,6 +984,10 @@ func (app *application) OrdersHandler(w http.ResponseWriter, r *http.Request) {
 			summary.FilledOrders++
 		case models.OrderStatusCancelled:
 			summary.CancelledOrders++
+		default:
+			if !isClosedOrderStatus(status) {
+				summary.ActiveOrders++
+			}
 		}
 
 		summary.TotalFilledNotional += order.FilledNotional
@@ -1013,17 +1071,18 @@ func (app *application) CancelOrderPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cancelled, ok := app.exchangeServer.CancelOrderByID(order.EngineOrderID)
-	if !ok {
-		_ = app.syncUserOpenOrders(userID)
-		app.sessionManager.Put(r.Context(), "flash", "error:order is no longer active")
-		http.Redirect(w, r, "/orders?tab=active", http.StatusSeeOther)
-		return
+	cancelledOnBook := false
+	var cancelled *pb.Order
+	if order.EngineOrderID > 0 {
+		cancelled, cancelledOnBook = app.exchangeServer.CancelOrderByID(order.EngineOrderID)
+		if !cancelledOnBook {
+			app.errorLog.Printf("order %d (engine=%d) missing from book during cancel, applying db fallback", order.ID, order.EngineOrderID)
+		}
 	}
 
 	if order.IsBuy() && order.Price > 0 {
 		releaseQty := order.Remaining()
-		if cancelled != nil && cancelled.Size > 0 && cancelled.Size < releaseQty {
+		if cancelledOnBook && cancelled != nil && cancelled.Size > 0 && cancelled.Size < releaseQty {
 			releaseQty = cancelled.Size
 		}
 		if releaseQty > 0 {
@@ -1040,7 +1099,12 @@ func (app *application) CancelOrderPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("success:Order #%d cancelled", order.ID))
+	message := fmt.Sprintf("success:Order #%d cancelled", order.ID)
+	if order.EngineOrderID > 0 && !cancelledOnBook {
+		message = fmt.Sprintf("success:Order #%d marked cancelled", order.ID)
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", message)
 	http.Redirect(w, r, "/orders?tab=active", http.StatusSeeOther)
 }
 
@@ -1072,9 +1136,12 @@ func (app *application) syncUserOpenOrders(userID int64) error {
 			continue
 		}
 
-		remaining := int64(0)
-		if v, ok := remainingByID[order.EngineOrderID]; ok {
-			remaining = v
+		remaining, ok := remainingByID[order.EngineOrderID]
+		if !ok {
+			if !app.shouldInferMissingProgress(order) {
+				continue
+			}
+			remaining = 0
 		}
 		if remaining < 0 {
 			remaining = 0
@@ -1243,7 +1310,16 @@ func matchesStatusFilter(status string, filter map[string]bool) bool {
 	if len(filter) == 0 {
 		return true
 	}
-	return filter[status]
+	if filter[status] {
+		return true
+	}
+
+	isActiveFilter := filter[models.OrderStatusOpen] && filter[models.OrderStatusPartiallyFilled]
+	if isActiveFilter {
+		return !isClosedOrderStatus(status)
+	}
+
+	return false
 }
 
 func statusFromProgress(quantity, filled int64) string {
@@ -1284,21 +1360,33 @@ func orderSide(bid bool) string {
 	return models.OrderSideSell
 }
 
+func isClosedOrderStatus(status string) bool {
+	normalized := strings.ToUpper(strings.TrimSpace(status))
+	return normalized == models.OrderStatusFilled || normalized == models.OrderStatusCancelled
+}
+
 func canCancelOrder(order *models.Order) bool {
 	if order == nil {
-		return false
-	}
-	if order.EngineOrderID == 0 {
 		return false
 	}
 	if !strings.EqualFold(order.OrderType, models.OrderTypeLimit) {
 		return false
 	}
 	status := strings.ToUpper(strings.TrimSpace(order.Status))
-	if status != models.OrderStatusOpen && status != models.OrderStatusPartiallyFilled {
+	if isClosedOrderStatus(status) {
 		return false
 	}
 	return order.Remaining() > 0
+}
+
+func (app *application) shouldInferMissingProgress(order *models.Order) bool {
+	if order == nil {
+		return false
+	}
+	if app.startedAt.IsZero() {
+		return true
+	}
+	return !order.CreatedAt.Before(app.startedAt)
 }
 
 func (app *application) unlockWalletUpTo(userID, amount int64) error {
