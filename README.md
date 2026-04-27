@@ -6,6 +6,20 @@ Zaraba is a cryptocurrency exchange backend written in Go, built around an in-me
 
 ![Zaraba architecture diagram](assets/chart.png)
 
+## Screenshots
+
+### Landing Page
+![Landing Page](assets/landingpage.png)
+
+### Markets
+![Markets](assets/markets.png)
+
+### Trade Interface
+![Trade](assets/trade.png)
+
+### Wallet
+![Wallet](assets/wallet.png)
+
 ## What it includes
 
 - In-memory matching engine for limit and market orders
