@@ -1,3 +1,5 @@
+-- connect to docker db : docker exec -it zaraba-db psql -U zaraba -d exchange
+
 -- Wallets table
 -- One wallet per user (USDT only)
 
