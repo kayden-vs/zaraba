@@ -136,6 +136,12 @@ func openDB(dsn string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Recycle connections proactively so cloud DB timeouts (e.g. Supabase) never
+	// leave the pool holding a dead connection, which causes "broken pipe" errors.
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)  // force-refresh before Supabase's ~5-10 min idle timeout
+	db.SetConnMaxIdleTime(1 * time.Minute)  // drop connections idle in pool for > 1 min
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
