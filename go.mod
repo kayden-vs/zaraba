@@ -22,4 +22,5 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	nhooyr.io/websocket v1.8.17 // indirect
 )

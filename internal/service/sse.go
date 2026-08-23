@@ -22,6 +22,11 @@ type Broker struct {
 	mu      sync.Mutex
 }
 
+// NewBroker creates a Broker ready to accept clients.
+func NewBroker() *Broker {
+	return &Broker{clients: make(map[chan []byte]bool)}
+}
+
 const (
 	MaxOrderBookLevels = 20
 	MaxRecentTrades    = 100
